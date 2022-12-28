@@ -5,15 +5,15 @@ game 'rdr3'
 description 'rsg-prison'
 
 client_scripts {
-	'client/client.lua'
+    'client/client.lua'
 }
 
 server_scripts {
-	'server/server.lua'
+    'server/server.lua'
 }
 
 shared_scripts {
-	'config.lua'
+    'config.lua'
 }
 
 use_fxv2_oal 'yes'

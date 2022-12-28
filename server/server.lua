@@ -6,9 +6,9 @@ RegisterNetEvent('rsg-prison:server:UpdatePlayer', function()
     local Player = RSGCore.Functions.GetPlayer(src)
     if not Player then return end
     Player.Functions.SetMetaData("injail", 0)
-	if Player.PlayerData.job.name ~= 'unemployed' and Config.RemoveJob == true then
-		Player.Functions.SetJob('unemployed')
-	end
+    if Player.PlayerData.job.name ~= 'unemployed' and Config.RemoveJob == true then
+        Player.Functions.SetJob('unemployed')
+    end
 end)
 
 RegisterNetEvent('rsg-prison:server:SaveJailItems', function()
