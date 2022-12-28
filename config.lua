@@ -15,8 +15,13 @@ Config.Locations = {
     }
 }
 
+Config.MenuLocations = {
+    -- trapper locations
+    {name = 'Jail Menu', prompt = 'sisika', coords = vector3(3351.31, -689.49, 44.03 -0.8), showblip = false, showmarker = true }, --sisika jail
+}
+
 -- jail shop
-Config.JailShopItems = {
+Config.PrisonShop = {
     [1] = {
         name = "bread",
         price = 1,
