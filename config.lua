@@ -2,6 +2,14 @@ Config = {}
 
 -- config settings
 Config.RemoveJob = false -- if true then player loses job
+Config.MarkerDistance = 10.0 -- distance for the marker to show
+
+-- blip config
+Config.Blip = {
+    blipName = 'Sisika Prison', -- Config.Blip.blipName
+    blipSprite = 'blip_mp_roles_bounty_hunter_lock', -- Config.Blip.blipSprite
+    blipScale = 0.2 -- Config.Blip.blipScale
+}
 
 -- locations
 Config.Locations = {
@@ -15,9 +23,15 @@ Config.Locations = {
     }
 }
 
+-- prison menu location
 Config.MenuLocations = {
-    -- trapper locations
-    {name = 'Jail Menu', prompt = 'sisika', coords = vector3(3351.31, -689.49, 44.03 -0.8), showblip = false, showmarker = true }, --sisika jail
+    {    --sisika jail
+        name = 'Jail Menu',
+        prompt = 'sisikaprison',
+        coords = vector3(3351.2497, -689.4622, 44.021572 -0.8),
+        showblip = true,
+        showmarker = true 
+    }, 
 }
 
 -- jail shop

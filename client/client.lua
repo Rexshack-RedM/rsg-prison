@@ -7,7 +7,7 @@ local jailTime = 0
 
 -- prompts
 Citizen.CreateThread(function()
-    for trapper, v in pairs(Config.MenuLocations) do
+    for prison, v in pairs(Config.MenuLocations) do
         exports['rsg-core']:createPrompt(v.prompt, v.coords, RSGCore.Shared.Keybinds['J'], 'Open ' .. v.name, {
             type = 'client',
             event = 'rsg-prison:client:menu',
@@ -25,13 +25,20 @@ end)
 -- draw marker if set to true in config
 CreateThread(function()
     while true do
-        local sleep = 0
-        for trapper, v in pairs(Config.MenuLocations) do
-            if v.showmarker == true then
-                Citizen.InvokeNative(0x2A32FAA57B937173, 0x07DCE236, v.coords, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 255, 215, 0, 155, false, false, false, 1, false, false, false)
+        Wait(1)
+        inRange = false
+        local pos = GetEntityCoords(PlayerPedId())
+        for prison, v in pairs(Config.MenuLocations) do
+            if #(pos - v.coords) < Config.MarkerDistance then
+                inRange = true
+                if v.showmarker == true then
+                    Citizen.InvokeNative(0x2A32FAA57B937173, 0x07DCE236, v.coords, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 255, 215, 0, 155, false, false, false, 1, false, false, false)
+                end
+            end
+            if not inRange then
+                Wait(2500)
             end
         end
-        Wait(sleep)
     end
 end)
 
