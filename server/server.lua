@@ -1,7 +1,16 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 local GotItems = {}
 
-RegisterNetEvent('rsg-prison:server:UpdatePlayer', function()
+-- update jail sentance
+RegisterNetEvent('rsg-prison:server:updateSentance', function(updatedTime)
+    local src = source
+    local Player = RSGCore.Functions.GetPlayer(src)
+    if not Player then return end
+    Player.Functions.SetMetaData("injail", updatedTime)
+end)
+
+-- auto free player
+RegisterNetEvent('rsg-prison:server:FreePlayer', function()
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)
     if not Player then return end
@@ -11,6 +20,7 @@ RegisterNetEvent('rsg-prison:server:UpdatePlayer', function()
     end
 end)
 
+-- save inventory items
 RegisterNetEvent('rsg-prison:server:SaveJailItems', function()
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)
@@ -23,6 +33,7 @@ RegisterNetEvent('rsg-prison:server:SaveJailItems', function()
     end
 end)
 
+-- give back inventory items
 RegisterNetEvent('rsg-prison:server:GiveJailItems', function()
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)
@@ -35,6 +46,7 @@ RegisterNetEvent('rsg-prison:server:GiveJailItems', function()
     Player.Functions.SetMetaData("jailitems", {})
 end)
 
+-- set criminal record
 RegisterNetEvent('rsg-prison:server:CheckRecordStatus', function()
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)

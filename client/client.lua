@@ -1,5 +1,5 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
-local jailtimeSecondsRemaining = 0
+local jailtimeMinsRemaining = 0
 local inJail = false
 local jailTime = 0
 
@@ -128,7 +128,7 @@ end)
 
 -----------------------------------------------------------------------------------
 
-RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+RegisterNetEvent('RSGCore:Client:OnPlayerLoaded', function()
     RSGCore.Functions.GetPlayerData(function(PlayerData)
         if PlayerData.metadata["injail"] > 0 then
             TriggerEvent("rsg-prison:client:Enter", PlayerData.metadata["injail"])
@@ -156,13 +156,12 @@ end)
 
 -- sent to jail
 RegisterNetEvent('rsg-prison:client:Enter', function(time)
-    jailTime = (60 * time) -- in seconds
+    jailTime = time -- in mins
     local RandomStartPosition = Config.Locations.spawns[math.random(1, #Config.Locations.spawns)]
     SetEntityCoords(PlayerPedId(), RandomStartPosition.coords.x, RandomStartPosition.coords.y, RandomStartPosition.coords.z - 0.9, 0, 0, 0, false)
     SetEntityHeading(PlayerPedId(), RandomStartPosition.coords.w)
     Wait(500)
-    RSGCore.Functions.Notify('Prison Sentence '..jailTime..' Seconds', 'primary')
-    Wait(5000)
+	TriggerServerEvent('rsg-prison:server:SaveJailItems')
     RSGCore.Functions.Notify('Your property has been seized', 'primary')
     inJail = true
     handleJailtime()
@@ -172,13 +171,19 @@ end)
 
 -- jail timer
 function handleJailtime()
-    jailtimeSecondsRemaining = jailTime
+    jailtimeMinsRemaining = jailTime
     Citizen.CreateThread(function()
-        while jailtimeSecondsRemaining > 0 do
-            Wait(1000)
-            jailtimeSecondsRemaining = jailtimeSecondsRemaining - 1
-            if jailtimeSecondsRemaining > 0 then
-                exports['rsg-core']:DrawText('Free in '..jailtimeSecondsRemaining..' seconds!', 'left')
+        while jailtimeMinsRemaining > 0 do
+            Wait(1000 * 60)
+            jailtimeMinsRemaining = jailtimeMinsRemaining - 1
+            if jailtimeMinsRemaining > 0 then
+                if jailtimeMinsRemaining > 1 then
+                    exports['rsg-core']:DrawText('Freedom in '..jailtimeMinsRemaining..' mins!', 'left')
+                    TriggerServerEvent('rsg-prison:server:updateSentance', jailtimeMinsRemaining)
+                else
+                    exports['rsg-core']:DrawText('Getting ready for release!', 'left')
+                    TriggerServerEvent('rsg-prison:server:updateSentance', jailtimeMinsRemaining)
+                end
             else
                 exports['rsg-core']:HideText()
                 TriggerEvent('rsg-prison:client:freedom')
@@ -191,7 +196,7 @@ end
 
 -- released from jail
 RegisterNetEvent('rsg-prison:client:freedom', function()
-    TriggerServerEvent('rsg-prison:server:UpdatePlayer')
+    TriggerServerEvent('rsg-prison:server:FreePlayer')
     TriggerServerEvent('rsg-prison:server:GiveJailItems')
     SetEntityCoords(PlayerPedId(), Config.Locations["outside"].coords.x, Config.Locations["outside"].coords.y, Config.Locations["outside"].coords.z, 0, 0, 0, false)
     SetEntityHeading(PlayerPedId(), Config.Locations["outside"].coords.w)
