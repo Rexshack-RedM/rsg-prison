@@ -9,15 +9,22 @@ RegisterNetEvent('rsg-prison:server:updateSentance', function(updatedTime)
     Player.Functions.SetMetaData("injail", updatedTime)
 end)
 
+-- remove player job
+RegisterNetEvent('rsg-prison:server:RemovePlayerJob', function()
+    local src = source
+    local Player = RSGCore.Functions.GetPlayer(src)
+    if not Player then return end
+    if Player.PlayerData.job.name ~= 'unemployed' and Config.RemoveJob == true then
+        Player.Functions.SetJob('unemployed')
+    end
+end)
+
 -- auto free player
 RegisterNetEvent('rsg-prison:server:FreePlayer', function()
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)
     if not Player then return end
     Player.Functions.SetMetaData("injail", 0)
-    if Player.PlayerData.job.name ~= 'unemployed' and Config.RemoveJob == true then
-        Player.Functions.SetJob('unemployed')
-    end
 end)
 
 -- save inventory items

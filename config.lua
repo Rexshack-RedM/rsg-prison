@@ -1,7 +1,7 @@
 Config = {}
 
 -- config settings
-Config.RemoveJob = false -- if true then player loses job
+Config.RemoveJob = true -- if true then player loses job
 Config.MarkerDistance = 10.0 -- distance for the marker to show
 
 -- blip config
