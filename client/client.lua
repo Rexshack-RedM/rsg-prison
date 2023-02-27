@@ -53,7 +53,7 @@ CreateThread(function()
             name = Config.PrisonZone[k].name,
             minZ = Config.PrisonZone[k].minz,
             maxZ = Config.PrisonZone[k].maxz,
-            debugPoly = true
+            debugPoly = false
         })
 
         Zones[k]:onPlayerInOut(function(isPointInside)
