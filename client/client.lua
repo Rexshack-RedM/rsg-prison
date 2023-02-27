@@ -252,6 +252,8 @@ AddEventHandler("rsg-prison:client:prisonclothes", function()
     Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x72E6EF74, true, true, true)
     Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0xEABE0032, true, true, true)
     Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x2026C46D, true, true, true)
+    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0xB6B6122D, true, true, true)
+    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0xB9E2FA01, true, true, true)
 
     if IsPedMale(ped) then
         Citizen.InvokeNative(0xD3A7B003ED343FD9, ped, 0x5BA76CCF, true, true, true)
