@@ -1,7 +1,10 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
+
 local jailtimeMinsRemaining = 0
 local inJail = false
+local inJailZone = false
 local jailTime = 0
+local Zones = {}
 
 -----------------------------------------------------------------------------------
 
@@ -39,6 +42,59 @@ CreateThread(function()
                 Wait(2500)
             end
         end
+    end
+end)
+
+-- Prison Zone
+CreateThread(function()
+    for k = 1, #Config.PrisonZone do
+        Zones[k] = PolyZone:Create(Config.PrisonZone[k].zones,
+        {
+            name = Config.PrisonZone[k].name,
+            minZ = Config.PrisonZone[k].minz,
+            maxZ = Config.PrisonZone[k].maxz,
+            debugPoly = true
+        })
+
+        Zones[k]:onPlayerInOut(function(isPointInside)
+            if not isPointInside then
+                inJailZone = false
+                return
+            end
+
+            inJailZone = true
+        end)
+    end
+end)
+
+-- Prison Zone Loop
+CreateThread(function()
+    while true do
+        local ped = PlayerPedId()
+        local isJailed = 0
+        local teleport = vector3(3368.31, -665.94, 46.29)
+
+        if LocalPlayer.state['isLoggedIn'] then
+            RSGCore.Functions.GetPlayerData(function(PlayerData)
+                isJailed = PlayerData.metadata["injail"]
+            end)
+        end
+
+        if isJailed <= 0 then goto continue end
+        if inJailZone then goto continue end
+
+        RSGCore.Functions.Notify('Returning you back to the Prison zone!', 'primary', 3000)
+
+        Wait(3000)
+        DoScreenFadeOut(1000)
+        Wait(1000)
+        SetEntityCoords(ped, teleport)
+        Wait(1000)
+        DoScreenFadeIn(1000)
+
+        ::continue::
+
+        Wait(10000)
     end
 end)
 
