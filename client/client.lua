@@ -98,76 +98,58 @@ CreateThread(function()
     end
 end)
 
--- prison menu
+-----------------------------------------------------------------------------------
+
 RegisterNetEvent('rsg-prison:client:menu', function()
-    exports['rsg-menu']:openMenu({
+    lib.registerContext(
         {
-            header = "Prison Menu",
-            isMenuHeader = true,
-        },
-        {
-            header = "Prison Shop",
-            icon = "fas fa-shopping-basket",
-            txt = "keep yourself alive",
-            params = { 
-                event = 'rsg-prison:client:shop',
-                isServer = false,
-                args = {}
+            id = 'prison_menu',
+            title = 'Prison Menu',
+            position = 'top-right',
+            options = {
+                {
+                    title = 'Prison Shop',
+                    description = 'keep yourself alive',
+                    icon = 'fas fa-shopping-basket',
+                    event = 'rsg-prison:client:shop'
+                },
+                {
+                    title = 'Post Office',
+                    description = 'keep in touch with loved ones',
+                    icon = 'far fa-envelope-open',
+                    event = 'rsg-prison:client:telegrammenu'
+                },
             }
-        },
-        {
-            header = "Post Office",
-            icon = "far fa-envelope-open",
-            txt = "keep in touch with loved ones",
-            params = { 
-                event = 'rsg-prison:client:telegrammenu',
-                isServer = false,
-                args = {}
-            }
-        },
-        {
-            header = "Close Menu",
-            txt = '',
-            params = {
-                event = 'rsg-menu:closeMenu',
-            }
-        },
-    })
+        }
+    )
+    lib.showContext('prison_menu')
 end)
 
--- telegram menu
-RegisterNetEvent('rsg-prison:client:telegrammenu', function(data)
-    exports['rsg-menu']:openMenu({
+RegisterNetEvent('rsg-prison:client:telegrammenu', function()
+    lib.registerContext(
         {
-            header = "| Telegram Menu |",
-            isMenuHeader = true,
-        },
-        {
-            header = "📥 | Read Messages",
-            txt = "read your telegram messages",
-            params = {
-                event = 'rsg-telegram:client:readmessages',
-                isServer = false,
-                args = {}
+            id = 'telegram_menu',
+            title = 'Telegram Menu',
+            position = 'top-right',
+            menu = 'prison_menu',
+            onBack = function() end,
+            options = {
+                {
+                    title = 'Read Messages',
+                    description = 'read your telegram messages',
+                    icon = 'far fa-envelope-open',
+                    event = 'rsg-telegram:client:ReadMessages'
+                },
+                {
+                    title = 'Send Telegram',
+                    description = 'send a telegram',
+                    icon = 'far fa-envelope-open',
+                    event = 'rsg-telegram:client:WriteMessagePostOffice'
+                },
             }
-        },
-        {
-            header = "📤 | Send Telegram",
-            txt = "send a telegram to another player",
-            params = {
-                event = 'rsg-telegram:client:writemessage',
-                isServer = false,
-                args = {}
-            }
-        },
-        {
-            header = "<<< Back",
-            txt = '',
-            params = {
-                event = 'rsg-prison:client:menu',
-            }
-        },
-    })
+        }
+    )
+    lib.showContext('telegram_menu')
 end)
 
 -----------------------------------------------------------------------------------

@@ -18,7 +18,13 @@ server_scripts {
 }
 
 shared_scripts {
+    '@ox_lib/init.lua',
     'config.lua'
+}
+
+dependencies {
+    'rsg-core',
+    'ox_lib',
 }
 
 use_fxv2_oal 'yes'
