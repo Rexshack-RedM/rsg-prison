@@ -203,6 +203,7 @@ RegisterNetEvent('rsg-prison:client:Enter', function(time)
     RSGCore.Functions.Notify('Your property has been seized', 'primary')
     TriggerEvent('rsg-prison:client:prisonclothes')
     TriggerServerEvent('rsg-prison:server:RemovePlayerJob')
+    TriggerServerEvent('InteractSound_SV:PlayWithinDistance', 5, 'jail', 0.6)
     inJail = true
     handleJailtime()
 end)
