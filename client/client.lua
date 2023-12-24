@@ -83,7 +83,7 @@ CreateThread(function()
         if isJailed <= 0 then goto continue end
         if inJailZone then goto continue end
 
-        RSGCore.Functions.Notify('Returning you back to the Prison zone!', 'primary', 3000)
+        lib.notify({ title = '🚨', description = 'Returning you back to the Prison zone!', type = 'inform', duration = 5000 })
 
         Wait(3000)
         DoScreenFadeOut(1000)
@@ -200,7 +200,7 @@ RegisterNetEvent('rsg-prison:client:Enter', function(time)
     SetEntityHeading(PlayerPedId(), RandomStartPosition.coords.w)
     Wait(500)
     TriggerServerEvent('rsg-prison:server:SaveJailItems')
-    RSGCore.Functions.Notify('Your property has been seized', 'primary')
+    lib.notify({ title = '🚨', description = 'Your property has been seized', type = 'inform', duration = 5000 })
     TriggerEvent('rsg-prison:client:prisonclothes')
     TriggerServerEvent('rsg-prison:server:RemovePlayerJob')
     TriggerServerEvent('InteractSound_SV:PlayWithinDistance', 5, 'jail', 0.6)
@@ -289,9 +289,9 @@ RegisterNetEvent('rsg-prison:client:freedom', function()
     TriggerServerEvent("rsg-appearance:LoadSkin")
     Wait(3000)
     DoScreenFadeIn(1000)
-    RSGCore.Functions.Notify('You\'re free from prison, good luck', 'primary')
+    lib.notify({ title = '🚨', description = 'You\'re free from prison, good luck', type = 'inform', duration = 5000 })
     Wait(5000)
-    RSGCore.Functions.Notify('You received your property back', 'primary')
+    lib.notify({ title = '🚨', description = 'You received your property back', type = 'inform', duration = 5000 })
     inJail = false
 end)
 
