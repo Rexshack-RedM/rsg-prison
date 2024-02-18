@@ -30,9 +30,9 @@ local function CheckVersion()
     end)
 end
 
------------------------------------------------------------------------
-
+--------------------------
 -- update jail sentance
+--------------------------
 RegisterNetEvent('rsg-prison:server:updateSentance', function(updatedTime)
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)
@@ -40,7 +40,9 @@ RegisterNetEvent('rsg-prison:server:updateSentance', function(updatedTime)
     Player.Functions.SetMetaData("injail", updatedTime)
 end)
 
+--------------------------
 -- remove player job
+--------------------------
 RegisterNetEvent('rsg-prison:server:RemovePlayerJob', function()
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)
@@ -50,7 +52,9 @@ RegisterNetEvent('rsg-prison:server:RemovePlayerJob', function()
     end
 end)
 
+--------------------------
 -- auto free player
+--------------------------
 RegisterNetEvent('rsg-prison:server:FreePlayer', function()
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)
@@ -58,7 +62,9 @@ RegisterNetEvent('rsg-prison:server:FreePlayer', function()
     Player.Functions.SetMetaData("injail", 0)
 end)
 
+--------------------------
 -- save inventory items
+--------------------------
 RegisterNetEvent('rsg-prison:server:SaveJailItems', function()
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)
@@ -71,7 +77,9 @@ RegisterNetEvent('rsg-prison:server:SaveJailItems', function()
     end
 end)
 
+--------------------------
 -- give back inventory items
+--------------------------
 RegisterNetEvent('rsg-prison:server:GiveJailItems', function()
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)
@@ -84,7 +92,9 @@ RegisterNetEvent('rsg-prison:server:GiveJailItems', function()
     Player.Functions.SetMetaData("jailitems", {})
 end)
 
+--------------------------
 -- set criminal record
+--------------------------
 RegisterNetEvent('rsg-prison:server:CheckRecordStatus', function()
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)

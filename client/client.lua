@@ -1,20 +1,18 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
-
 local jailtimeMinsRemaining = 0
 local inJail = false
 local inJailZone = false
 local jailTime = 0
 local Zones = {}
 
------------------------------------------------------------------------------------
-
+--------------------------
 -- prompts
+--------------------------
 Citizen.CreateThread(function()
     for prison, v in pairs(Config.MenuLocations) do
-        exports['rsg-core']:createPrompt(v.prompt, v.coords, RSGCore.Shared.Keybinds['J'], 'Open ' .. v.name, {
+        exports['rsg-core']:createPrompt(v.prompt, v.coords, RSGCore.Shared.Keybinds[Config.Keybind], 'Open ' .. v.name, {
             type = 'client',
             event = 'rsg-prison:client:menu',
-            args = {},
         })
         if v.showblip == true then
             local PrisonBlip = Citizen.InvokeNative(0x554D9D53F696D002, 1664425300, v.coords)
@@ -25,7 +23,9 @@ Citizen.CreateThread(function()
     end
 end)
 
+--------------------------
 -- draw marker if set to true in config
+--------------------------
 CreateThread(function()
     while true do
         Wait(1)
@@ -45,7 +45,9 @@ CreateThread(function()
     end
 end)
 
+--------------------------
 -- Prison Zone
+--------------------------
 CreateThread(function()
     for k = 1, #Config.PrisonZone do
         Zones[k] = PolyZone:Create(Config.PrisonZone[k].zones,
@@ -67,7 +69,9 @@ CreateThread(function()
     end
 end)
 
+--------------------------
 -- Prison Zone Loop
+--------------------------
 CreateThread(function()
     while true do
         local ped = PlayerPedId()
@@ -82,9 +86,15 @@ CreateThread(function()
 
         if isJailed <= 0 then goto continue end
         if inJailZone then goto continue end
-
-        lib.notify({ title = '🚨', description = 'Returning you back to the Prison zone!', type = 'inform', duration = 5000 })
-
+        lib.notify(
+            { 
+                title = 'Returning to Prison', 
+                type = 'inform',
+                icon = 'fa-solid fa-handcuffs',
+                iconAnimation = 'shake',
+                duration = 7000
+            }
+        )
         Wait(3000)
         DoScreenFadeOut(1000)
         Wait(1000)
@@ -98,7 +108,9 @@ CreateThread(function()
     end
 end)
 
------------------------------------------------------------------------------------
+--------------------------
+-- prison menu
+--------------------------
 
 RegisterNetEvent('rsg-prison:client:menu', function()
     lib.registerContext(
@@ -125,6 +137,9 @@ RegisterNetEvent('rsg-prison:client:menu', function()
     lib.showContext('prison_menu')
 end)
 
+--------------------------
+-- prison telegram
+--------------------------
 RegisterNetEvent('rsg-prison:client:telegrammenu', function()
     lib.registerContext(
         {
@@ -152,9 +167,9 @@ RegisterNetEvent('rsg-prison:client:telegrammenu', function()
     lib.showContext('telegram_menu')
 end)
 
------------------------------------------------------------------------------------
-
+--------------------------
 -- prison shop
+--------------------------
 RegisterNetEvent('rsg-prison:client:shop')
 AddEventHandler('rsg-prison:client:shop', function()
     local ShopItems = {}
@@ -164,8 +179,9 @@ AddEventHandler('rsg-prison:client:shop', function()
     TriggerServerEvent("inventory:server:OpenInventory", "shop", "PrisonShop_"..math.random(1, 99), ShopItems)
 end)
 
------------------------------------------------------------------------------------
-
+--------------------------
+-- check onload player
+--------------------------
 RegisterNetEvent('RSGCore:Client:OnPlayerLoaded', function()
     RSGCore.Functions.GetPlayerData(function(PlayerData)
         if PlayerData.metadata["injail"] > 0 then
@@ -174,6 +190,9 @@ RegisterNetEvent('RSGCore:Client:OnPlayerLoaded', function()
     end)
 end)
 
+--------------------------
+-- on resource start
+--------------------------
 AddEventHandler('onResourceStart', function(resource)
     if resource ~= GetCurrentResourceName() then return end
     Wait(100)
@@ -190,9 +209,9 @@ RegisterNetEvent('RSGCore:Client:OnPlayerUnload', function()
     inJail = false
 end)
 
------------------------------------------------------------------------------------
-
--- sent to jail
+--------------------------
+-- send to jail
+--------------------------
 RegisterNetEvent('rsg-prison:client:Enter', function(time)
     jailTime = time -- in mins
     local RandomStartPosition = Config.Locations.spawns[math.random(1, #Config.Locations.spawns)]
@@ -200,7 +219,15 @@ RegisterNetEvent('rsg-prison:client:Enter', function(time)
     SetEntityHeading(PlayerPedId(), RandomStartPosition.coords.w)
     Wait(500)
     TriggerServerEvent('rsg-prison:server:SaveJailItems')
-    lib.notify({ title = '🚨', description = 'Your property has been seized', type = 'inform', duration = 5000 })
+    lib.notify(
+        { 
+            title = 'Property Seized', 
+            type = 'inform',
+            icon = 'fa-solid fa-handcuffs',
+            iconAnimation = 'shake',
+            duration = 7000
+        }
+    )
     TriggerEvent('rsg-prison:client:prisonclothes')
     TriggerServerEvent('rsg-prison:server:RemovePlayerJob')
     TriggerServerEvent('InteractSound_SV:PlayWithinDistance', 5, 'jail', 0.6)
@@ -208,8 +235,9 @@ RegisterNetEvent('rsg-prison:client:Enter', function(time)
     handleJailtime()
 end)
 
------------------------------------------------------------------------------------
-
+--------------------------
+-- set prison clothing
+--------------------------
 RegisterNetEvent("rsg-prison:client:prisonclothes") -- prison outfit event
 AddEventHandler("rsg-prison:client:prisonclothes", function()
     local ped = PlayerPedId()
@@ -250,9 +278,9 @@ AddEventHandler("rsg-prison:client:prisonclothes", function()
     RemoveAllPedWeapons(ped, true, true)
 end)
 
------------------------------------------------------------------------------------
-
+--------------------------
 -- jail timer
+--------------------------
 function handleJailtime()
     jailtimeMinsRemaining = jailTime
     Citizen.CreateThread(function()
@@ -275,9 +303,9 @@ function handleJailtime()
     end)
 end
 
------------------------------------------------------------------------------------
-
+--------------------------
 -- released from jail
+--------------------------
 RegisterNetEvent('rsg-prison:client:freedom', function()
     TriggerServerEvent('rsg-prison:server:FreePlayer')
     TriggerServerEvent('rsg-prison:server:GiveJailItems')
@@ -289,15 +317,31 @@ RegisterNetEvent('rsg-prison:client:freedom', function()
     local currentHealth = GetEntityHealth(PlayerPedId())
     local maxStamina = Citizen.InvokeNative(0xCB42AFE2B613EE55, PlayerPedId(), Citizen.ResultAsFloat())
     local currentStamina = Citizen.InvokeNative(0x775A1CA7893AA8B5, PlayerPedId(), Citizen.ResultAsFloat()) / maxStamina * 100
-    TriggerServerEvent("rsg-appearance:LoadSkin")
-    Wait(3000)
+    ExecuteCommand('loadskin')
+    Wait(1000)
     SetEntityHealth(PlayerPedId(), currentHealth )
     Citizen.InvokeNative(0xC3D4B754C0E86B9E, PlayerPedId(), currentStamina)
     DoScreenFadeIn(1000)
-    lib.notify({ title = '🚨', description = 'You\'re free from prison, good luck', type = 'inform', duration = 5000 })
-    Wait(5000)
-    lib.notify({ title = '🚨', description = 'You received your property back', type = 'inform', duration = 5000 })
+    lib.notify(
+        { 
+            title = 'Freedom', 
+            description = 'You\'re free from prison, good luck',
+            type = 'inform',
+            icon = 'fa-solid fa-handcuffs',
+            iconAnimation = 'shake',
+            duration = 7000
+        }
+    )
+    Wait(7000)
+    lib.notify(
+        { 
+            title = 'Property Returned', 
+            description = 'You\'re property has been returned to your inventory',
+            type = 'inform',
+            icon = 'fa-solid fa-handcuffs',
+            iconAnimation = 'shake',
+            duration = 7000
+        }
+    )
     inJail = false
 end)
-
------------------------------------------------------------------------------------
