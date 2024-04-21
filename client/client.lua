@@ -8,17 +8,17 @@ local Zones = {}
 --------------------------
 -- prompts
 --------------------------
-Citizen.CreateThread(function()
+CreateThread(function()
     for prison, v in pairs(Config.MenuLocations) do
-        exports['rsg-core']:createPrompt(v.prompt, v.coords, RSGCore.Shared.Keybinds[Config.Keybind], 'Open ' .. v.name, {
+        exports['rsg-core']:createPrompt(v.prompt, v.coords, RSGCore.Shared.Keybinds[Config.Keybind], Lang:t('client.lang_1') .. v.name, {
             type = 'client',
             event = 'rsg-prison:client:menu',
         })
         if v.showblip == true then
-            local PrisonBlip = Citizen.InvokeNative(0x554D9D53F696D002, 1664425300, v.coords)
+            local PrisonBlip = BlipAddForCoords(1664425300, v.coords)
             SetBlipSprite(PrisonBlip, GetHashKey(Config.Blip.blipSprite), true)
             SetBlipScale(PrisonBlip, Config.Blip.blipScale)
-            Citizen.InvokeNative(0x9CB1A1623062F402, PrisonBlip, Config.Blip.blipName)
+            SetBlipName(PrisonBlip, Config.Blip.blipName)
         end
     end
 end)
@@ -30,12 +30,12 @@ CreateThread(function()
     while true do
         Wait(1)
         inRange = false
-        local pos = GetEntityCoords(PlayerPedId())
+        local pos = GetEntityCoords(cache.ped)
         for prison, v in pairs(Config.MenuLocations) do
             if #(pos - v.coords) < Config.MarkerDistance then
                 inRange = true
                 if v.showmarker == true then
-                    Citizen.InvokeNative(0x2A32FAA57B937173, 0x07DCE236, v.coords, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 255, 215, 0, 155, false, false, false, 1, false, false, false)
+                    DrawMarker(0x07DCE236, v.coords, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 255, 215, 0, 155, false, false, false, 1, false, false, false)
                 end
             end
             if not inRange then
@@ -74,7 +74,6 @@ end)
 --------------------------
 CreateThread(function()
     while true do
-        local ped = PlayerPedId()
         local isJailed = 0
         local teleport = vector3(3368.31, -665.94, 46.29)
 
@@ -88,7 +87,7 @@ CreateThread(function()
         if inJailZone then goto continue end
         lib.notify(
             { 
-                title = 'Returning to Prison', 
+                title = Lang:t('client.lang_2'), 
                 type = 'inform',
                 icon = 'fa-solid fa-handcuffs',
                 iconAnimation = 'shake',
@@ -98,7 +97,7 @@ CreateThread(function()
         Wait(3000)
         DoScreenFadeOut(1000)
         Wait(1000)
-        SetEntityCoords(ped, teleport)
+        SetEntityCoords(cache.ped, teleport)
         Wait(1000)
         DoScreenFadeIn(1000)
 
@@ -116,18 +115,18 @@ RegisterNetEvent('rsg-prison:client:menu', function()
     lib.registerContext(
         {
             id = 'prison_menu',
-            title = 'Prison Menu',
+            title = Lang:t('client.lang_3'),
             position = 'top-right',
             options = {
                 {
-                    title = 'Prison Shop',
-                    description = 'keep yourself alive',
+                    title = Lang:t('client.lang_4'),
+                    description = Lang:t('client.lang_5'),
                     icon = 'fas fa-shopping-basket',
                     event = 'rsg-prison:client:shop'
                 },
                 {
-                    title = 'Post Office',
-                    description = 'keep in touch with loved ones',
+                    title = Lang:t('client.lang_6'),
+                    description = Lang:t('client.lang_7'),
                     icon = 'far fa-envelope-open',
                     event = 'rsg-prison:client:telegrammenu'
                 },
@@ -144,20 +143,20 @@ RegisterNetEvent('rsg-prison:client:telegrammenu', function()
     lib.registerContext(
         {
             id = 'telegram_menu',
-            title = 'Telegram Menu',
+            title = Lang:t('client.lang_8'),
             position = 'top-right',
             menu = 'prison_menu',
             onBack = function() end,
             options = {
                 {
-                    title = 'Read Messages',
-                    description = 'read your telegram messages',
+                    title = Lang:t('client.lang_9'),
+                    description = Lang:t('client.lang_10'),
                     icon = 'far fa-envelope-open',
                     event = 'rsg-telegram:client:ReadMessages'
                 },
                 {
-                    title = 'Send Telegram',
-                    description = 'send a telegram',
+                    title = Lang:t('client.lang_11'),
+                    description = Lang:t('client.lang_12'),
                     icon = 'far fa-envelope-open',
                     event = 'rsg-telegram:client:WriteMessagePostOffice'
                 },
@@ -215,13 +214,13 @@ end)
 RegisterNetEvent('rsg-prison:client:Enter', function(time)
     jailTime = time -- in mins
     local RandomStartPosition = Config.Locations.spawns[math.random(1, #Config.Locations.spawns)]
-    SetEntityCoords(PlayerPedId(), RandomStartPosition.coords.x, RandomStartPosition.coords.y, RandomStartPosition.coords.z - 0.9, 0, 0, 0, false)
-    SetEntityHeading(PlayerPedId(), RandomStartPosition.coords.w)
+    SetEntityCoords(cache.ped, RandomStartPosition.coords.x, RandomStartPosition.coords.y, RandomStartPosition.coords.z - 0.9, 0, 0, 0, false)
+    SetEntityHeading(cache.ped, RandomStartPosition.coords.w)
     Wait(500)
     TriggerServerEvent('rsg-prison:server:SaveJailItems')
     lib.notify(
         { 
-            title = 'Property Seized', 
+            title = Lang:t('client.lang_13'), 
             type = 'inform',
             icon = 'fa-solid fa-handcuffs',
             iconAnimation = 'shake',
@@ -240,42 +239,41 @@ end)
 --------------------------
 RegisterNetEvent("rsg-prison:client:prisonclothes") -- prison outfit event
 AddEventHandler("rsg-prison:client:prisonclothes", function()
-    local ped = PlayerPedId()
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x9925C067, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x485EE834, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x18729F39, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x3107499B, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x3C1A74CD, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x3F1F01E5, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x3F7F3587, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x49C89D9B, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x4A73515C, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x514ADCEA, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x5FC29285, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x79D7DF96, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x7A96FACA, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x877A2CF7, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x9B2C8B89, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0xA6D134C6, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0xE06D30CE, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x662AC34, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0xAF14310B, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x72E6EF74, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0xEABE0032, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0x2026C46D, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0xB6B6122D, true, true, true)
-    Citizen.InvokeNative(0xDF631E4BCE1B1FC4, ped, 0xB9E2FA01, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0x9925C067, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0x485EE834, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0x18729F39, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0x3107499B, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0x3C1A74CD, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0x3F1F01E5, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0x3F7F3587, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0x49C89D9B, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0x4A73515C, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0x514ADCEA, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0x5FC29285, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0x79D7DF96, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0x7A96FACA, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0x877A2CF7, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0x9B2C8B89, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0xA6D134C6, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0xE06D30CE, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0x662AC34,  true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0xAF14310B, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0x72E6EF74, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0xEABE0032, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0x2026C46D, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0xB6B6122D, true, true, true)
+    RemoveShopItemFromPedByCategory(cache.ped, 0xB9E2FA01, true, true, true)
 
-    if IsPedMale(ped) then
-        Citizen.InvokeNative(0xD3A7B003ED343FD9, ped, 0x5BA76CCF, true, true, true)
-        Citizen.InvokeNative(0xD3A7B003ED343FD9, ped, 0x216612F0, true, true, true)
-        Citizen.InvokeNative(0xD3A7B003ED343FD9, ped, 0x1CCEE58D, true, true, true)
+    if IsPedMale(cache.ped) then
+        ApplyShopItemToPed(cache.ped, 0x5BA76CCF, true, true, true)
+        ApplyShopItemToPed(cache.ped, 0x216612F0, true, true, true)
+        ApplyShopItemToPed(cache.ped, 0x1CCEE58D, true, true, true)
     else
-        Citizen.InvokeNative(0xD3A7B003ED343FD9, ped, 0x6AB27695, true, true, true)
-        Citizen.InvokeNative(0xD3A7B003ED343FD9, ped, 0x75BC0CF5, true, true, true)
-        Citizen.InvokeNative(0xD3A7B003ED343FD9, ped, 0x14683CDF, true, true, true)
+        ApplyShopItemToPed(cache.ped, 0x6AB27695, true, true, true)
+        ApplyShopItemToPed(cache.ped, 0x75BC0CF5, true, true, true)
+        ApplyShopItemToPed(cache.ped, 0x14683CDF, true, true, true)
     end
-    RemoveAllPedWeapons(ped, true, true)
+    RemoveAllPedWeapons(cache.ped, true, true)
 end)
 
 --------------------------
@@ -283,16 +281,16 @@ end)
 --------------------------
 function handleJailtime()
     jailtimeMinsRemaining = jailTime
-    Citizen.CreateThread(function()
+    CreateThread(function()
         while jailtimeMinsRemaining > 0 do
             Wait(1000 * 60)
             jailtimeMinsRemaining = jailtimeMinsRemaining - 1
             if jailtimeMinsRemaining > 0 then
                 if jailtimeMinsRemaining > 1 then
-                    exports['rsg-core']:DrawText('Freedom in '..jailtimeMinsRemaining..' mins!', 'left')
+                    exports['rsg-core']:DrawText(Lang:t('client.lang_14')..jailtimeMinsRemaining..Lang:t('client.lang_15'), 'left')
                     TriggerServerEvent('rsg-prison:server:updateSentance', jailtimeMinsRemaining)
                 else
-                    exports['rsg-core']:DrawText('Getting ready for release!', 'left')
+                    exports['rsg-core']:DrawText(Lang:t('client.lang_16'), 'left')
                     TriggerServerEvent('rsg-prison:server:updateSentance', jailtimeMinsRemaining)
                 end
             else
@@ -312,20 +310,20 @@ RegisterNetEvent('rsg-prison:client:freedom', function()
     Wait(500)
     DoScreenFadeOut(1000)
     Wait(3000)
-    SetEntityCoords(PlayerPedId(), Config.Locations["outside"].coords.x, Config.Locations["outside"].coords.y, Config.Locations["outside"].coords.z, 0, 0, 0, false)
-    SetEntityHeading(PlayerPedId(), Config.Locations["outside"].coords.w)
-    local currentHealth = GetEntityHealth(PlayerPedId())
-    local maxStamina = Citizen.InvokeNative(0xCB42AFE2B613EE55, PlayerPedId(), Citizen.ResultAsFloat())
-    local currentStamina = Citizen.InvokeNative(0x775A1CA7893AA8B5, PlayerPedId(), Citizen.ResultAsFloat()) / maxStamina * 100
+    SetEntityCoords(cache.ped, Config.Locations["outside"].coords.x, Config.Locations["outside"].coords.y, Config.Locations["outside"].coords.z, 0, 0, 0, false)
+    SetEntityHeading(cache.ped, Config.Locations["outside"].coords.w)
+    local currentHealth = GetEntityHealth(cache.ped)
+    local maxStamina = GetPedMaxStamina(cache.ped, Citizen.ResultAsFloat())
+    local currentStamina = GetPedStamina(cache.ped, Citizen.ResultAsFloat()) / maxStamina * 100
     ExecuteCommand('loadskin')
     Wait(1000)
-    SetEntityHealth(PlayerPedId(), currentHealth )
-    Citizen.InvokeNative(0xC3D4B754C0E86B9E, PlayerPedId(), currentStamina)
+    SetEntityHealth(cache.ped, currentHealth )
+    ChangePedStamina(cache.ped, currentStamina)
     DoScreenFadeIn(1000)
     lib.notify(
         { 
-            title = 'Freedom', 
-            description = 'You\'re free from prison, good luck',
+            title = Lang:t('client.lang_17'), 
+            description = Lang:t('client.lang_18'),
             type = 'inform',
             icon = 'fa-solid fa-handcuffs',
             iconAnimation = 'shake',
@@ -335,8 +333,8 @@ RegisterNetEvent('rsg-prison:client:freedom', function()
     Wait(7000)
     lib.notify(
         { 
-            title = 'Property Returned', 
-            description = 'You\'re property has been returned to your inventory',
+            title = Lang:t('client.lang_19'), 
+            description = Lang:t('client.lang_20'),
             type = 'inform',
             icon = 'fa-solid fa-handcuffs',
             iconAnimation = 'shake',
