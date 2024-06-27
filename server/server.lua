@@ -82,3 +82,11 @@ RegisterNetEvent('rsg-prison:server:CheckRecordStatus', function()
         end
     end
 end)
+
+RegisterNetEvent('rsg-prison:server:resetoutlawstatus', function()
+    local src = source
+    local Player = RSGCore.Functions.GetPlayer(src)
+    if not Player then return end
+    local citizenid = Player.PlayerData.citizenid
+    MySQL.update('UPDATE players SET outlawstatus = ? WHERE citizenid = ?', { 0, citizenid })
+end)

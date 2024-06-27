@@ -307,7 +307,7 @@ end
 RegisterNetEvent('rsg-prison:client:freedom', function()
     TriggerServerEvent('rsg-prison:server:FreePlayer')
     TriggerServerEvent('rsg-prison:server:GiveJailItems')
-    TriggerServerEvent('RSGCore:Server:SetMetaData', 'outlawstatus', 0)
+    TriggerServerEvent('rsg-prison:server:resetoutlawstatus')
     Wait(500)
     DoScreenFadeOut(1000)
     Wait(3000)
