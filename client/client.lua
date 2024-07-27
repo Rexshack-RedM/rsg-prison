@@ -6,41 +6,15 @@ local jailTime = 0
 local Zones = {}
 
 --------------------------
--- prompts
+-- show blip
 --------------------------
 CreateThread(function()
     for prison, v in pairs(Config.MenuLocations) do
-        exports['rsg-core']:createPrompt(v.prompt, v.coords, RSGCore.Shared.Keybinds[Config.Keybind], Lang:t('client.lang_1') .. v.name, {
-            type = 'client',
-            event = 'rsg-prison:client:menu',
-        })
         if v.showblip == true then
             local PrisonBlip = BlipAddForCoords(1664425300, v.coords)
             SetBlipSprite(PrisonBlip, GetHashKey(Config.Blip.blipSprite), true)
             SetBlipScale(PrisonBlip, Config.Blip.blipScale)
             SetBlipName(PrisonBlip, Config.Blip.blipName)
-        end
-    end
-end)
-
---------------------------
--- draw marker if set to true in config
---------------------------
-CreateThread(function()
-    while true do
-        Wait(1)
-        inRange = false
-        local pos = GetEntityCoords(cache.ped)
-        for prison, v in pairs(Config.MenuLocations) do
-            if #(pos - v.coords) < Config.MarkerDistance then
-                inRange = true
-                if v.showmarker == true then
-                    DrawMarker(0x07DCE236, v.coords, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 255, 215, 0, 155, false, false, false, 1, false, false, false)
-                end
-            end
-            if not inRange then
-                Wait(2500)
-            end
         end
     end
 end)

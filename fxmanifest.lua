@@ -3,7 +3,7 @@ rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aw
 game 'rdr3'
 
 description 'rsg-prison'
-version '1.0.7'
+version '1.0.8'
 
 shared_scripts {
     '@ox_lib/init.lua',
@@ -18,7 +18,8 @@ client_scripts {
     '@PolyZone/EntityZone.lua',
     '@PolyZone/CircleZone.lua',
     '@PolyZone/ComboZone.lua',
-    'client/client.lua'
+    'client/client.lua',
+    'client/npcs.lua'
 }
 
 server_scripts {

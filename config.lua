@@ -4,6 +4,8 @@ Config = {}
 Config.RemoveJob = true -- if true then player loses job
 Config.MarkerDistance = 10.0 -- distance for the marker to show
 Config.Keybind = 'J'
+Config.DistanceSpawn = 20.0
+Config.FadeIn = true
 
 -- blip config
 Config.Blip = {
@@ -26,20 +28,21 @@ Config.Locations = {
 
 -- prison menu location
 Config.MenuLocations = {
-    {    --sisika jail
+    {
         name = 'Jail Menu',
         prompt = 'sisikaprison',
-        coords = vector3(3351.2497, -689.4622, 44.021572 -0.8),
-        showblip = true,
-        showmarker = true 
-    }, 
+        coords = vector3(3352.11, -690.77, 44.25),
+        npcmodel = `s_m_m_skpguard_01`,
+        npccoords = vector4(3352.11, -690.77, 44.25, 31.30),
+        showblip = true
+    },
 }
 
 -- jail shop
 Config.PrisonShop = {
     [1] = {
         name = "bread",
-        price = 1,
+        price = 0,
         amount = 50,
         info = {},
         type = "item",
@@ -47,7 +50,7 @@ Config.PrisonShop = {
     },
     [2] = {
         name = "water",
-        price = 1,
+        price = 0,
         amount = 50,
         info = {},
         type = "item",
