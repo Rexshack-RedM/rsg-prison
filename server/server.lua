@@ -56,6 +56,7 @@ RegisterNetEvent('rsg-prison:server:GiveJailItems', function()
     local Player = RSGCore.Functions.GetPlayer(src)
     if not Player then return end
     Wait(1000)
+    Player.Functions.ClearInventory()
     for _, v in pairs(Player.PlayerData.metadata["jailitems"]) do
         Player.Functions.AddItem(v.name, v.amount, false, v.info)
     end
