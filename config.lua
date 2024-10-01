@@ -38,26 +38,6 @@ Config.MenuLocations = {
     },
 }
 
--- jail shop
-Config.PrisonShop = {
-    [1] = {
-        name = "bread",
-        price = 0,
-        amount = 50,
-        info = {},
-        type = "item",
-        slot = 1
-    },
-    [2] = {
-        name = "water",
-        price = 0,
-        amount = 50,
-        info = {},
-        type = "item",
-        slot = 2
-    }
-}
-
 Config.PrisonZone =
 {
     [1] =

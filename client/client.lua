@@ -145,11 +145,7 @@ end)
 --------------------------
 RegisterNetEvent('rsg-prison:client:shop')
 AddEventHandler('rsg-prison:client:shop', function()
-    local ShopItems = {}
-    ShopItems.label = "Prison Shop"
-    ShopItems.items = Config.PrisonShop
-    ShopItems.slots = #Config.PrisonShop
-    TriggerServerEvent("inventory:server:OpenInventory", "shop", "PrisonShop_"..math.random(1, 99), ShopItems)
+    TriggerServerEvent('rsg-shops:server:openstore', 'prison', 'prison', 'Prison Shop')
 end)
 
 --------------------------
