@@ -1,4 +1,5 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
+lib.locale()
 local jailtimeMinsRemaining = 0
 local inJail = false
 local inJailZone = false
@@ -59,19 +60,14 @@ CreateThread(function()
 
         if isJailed <= 0 then goto continue end
         if inJailZone then goto continue end
-        lib.notify(
-            { 
-                title = Lang:t('client.lang_2'), 
-                type = 'inform',
-                icon = 'fa-solid fa-handcuffs',
-                iconAnimation = 'shake',
-                duration = 7000
-            }
-        )
+        lib.notify( { title = locale('cl_returning'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 } )
+
         Wait(3000)
         DoScreenFadeOut(1000)
+
         Wait(1000)
         SetEntityCoords(cache.ped, teleport)
+
         Wait(1000)
         DoScreenFadeIn(1000)
 
@@ -85,22 +81,24 @@ end)
 -- prison menu
 --------------------------
 
-RegisterNetEvent('rsg-prison:client:menu', function()
+RegisterNetEvent('rsg-prison:client:menu', function(id)
     lib.registerContext(
         {
             id = 'prison_menu',
-            title = Lang:t('client.lang_3'),
+            title = locale('cl_prison_menu'),
             position = 'top-right',
             options = {
                 {
-                    title = Lang:t('client.lang_4'),
-                    description = Lang:t('client.lang_5'),
+                    title = locale('cl_prison_shop'),
+                    description = locale('cl_keep'),
                     icon = 'fas fa-shopping-basket',
-                    event = 'rsg-prison:client:shop'
+                    onSelect = function()
+                        TriggerServerEvent('rsg-shops:server:openstore', 'PrisonShop', 'PrisonShop', locale('cl_prison_shop'))
+                    end,
                 },
                 {
-                    title = Lang:t('client.lang_6'),
-                    description = Lang:t('client.lang_7'),
+                    title = locale('cl_post_office'),
+                    description = locale('cl_keep_in'),
                     icon = 'far fa-envelope-open',
                     event = 'rsg-prison:client:telegrammenu'
                 },
@@ -117,20 +115,20 @@ RegisterNetEvent('rsg-prison:client:telegrammenu', function()
     lib.registerContext(
         {
             id = 'telegram_menu',
-            title = Lang:t('client.lang_8'),
+            title = locale('cl_telegram'),
             position = 'top-right',
             menu = 'prison_menu',
             onBack = function() end,
             options = {
                 {
-                    title = Lang:t('client.lang_9'),
-                    description = Lang:t('client.lang_10'),
+                    title = locale('cl_read'),
+                    description = locale('cl_read_your'),
                     icon = 'far fa-envelope-open',
                     event = 'rsg-telegram:client:ReadMessages'
                 },
                 {
-                    title = Lang:t('client.lang_11'),
-                    description = Lang:t('client.lang_12'),
+                    title = locale('cl_send'),
+                    description = locale('cl_send_a'),
                     icon = 'far fa-envelope-open',
                     event = 'rsg-telegram:client:WriteMessagePostOffice'
                 },
@@ -138,14 +136,6 @@ RegisterNetEvent('rsg-prison:client:telegrammenu', function()
         }
     )
     lib.showContext('telegram_menu')
-end)
-
---------------------------
--- prison shop
---------------------------
-RegisterNetEvent('rsg-prison:client:shop')
-AddEventHandler('rsg-prison:client:shop', function()
-    TriggerServerEvent('rsg-shops:server:openstore', 'prison', 'prison', 'Prison Shop')
 end)
 
 --------------------------
@@ -188,15 +178,8 @@ RegisterNetEvent('rsg-prison:client:Enter', function(time)
     SetEntityHeading(cache.ped, RandomStartPosition.coords.w)
     Wait(500)
     TriggerServerEvent('rsg-prison:server:SaveJailItems')
-    lib.notify(
-        { 
-            title = Lang:t('client.lang_13'), 
-            type = 'inform',
-            icon = 'fa-solid fa-handcuffs',
-            iconAnimation = 'shake',
-            duration = 7000
-        }
-    )
+
+    lib.notify( { title = locale('cl_property'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 } )
     TriggerEvent('rsg-prison:client:prisonclothes')
     TriggerServerEvent('rsg-prison:server:RemovePlayerJob')
     TriggerServerEvent('InteractSound_SV:PlayWithinDistance', 5, 'jail', 0.6)
@@ -257,10 +240,11 @@ function handleJailtime()
             jailtimeMinsRemaining = jailtimeMinsRemaining - 1
             if jailtimeMinsRemaining > 0 then
                 if jailtimeMinsRemaining > 1 then
-                    exports['rsg-core']:DrawText(Lang:t('client.lang_14')..jailtimeMinsRemaining..Lang:t('client.lang_15'), 'left')
+
+                    exports['rsg-core']:DrawText(locale('cl_freedom_in') .. jailtimeMinsRemaining .. locale('cl_time'), 'left')
                     TriggerServerEvent('rsg-prison:server:updateSentance', jailtimeMinsRemaining)
                 else
-                    exports['rsg-core']:DrawText(Lang:t('client.lang_16'), 'left')
+                    exports['rsg-core']:DrawText(locale('cl_getting'), 'left')
                     TriggerServerEvent('rsg-prison:server:updateSentance', jailtimeMinsRemaining)
                 end
             else
@@ -291,26 +275,9 @@ RegisterNetEvent('rsg-prison:client:freedom', function()
     SetEntityHealth(cache.ped, currentHealth )
     ChangePedStamina(cache.ped, currentStamina)
     DoScreenFadeIn(1000)
-    lib.notify(
-        { 
-            title = Lang:t('client.lang_17'), 
-            description = Lang:t('client.lang_18'),
-            type = 'inform',
-            icon = 'fa-solid fa-handcuffs',
-            iconAnimation = 'shake',
-            duration = 7000
-        }
-    )
+
+    lib.notify( { title = locale('cl_freedom'), description = locale('cl_free'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 } )
     Wait(7000)
-    lib.notify(
-        { 
-            title = Lang:t('client.lang_19'), 
-            description = Lang:t('client.lang_20'),
-            type = 'inform',
-            icon = 'fa-solid fa-handcuffs',
-            iconAnimation = 'shake',
-            duration = 7000
-        }
-    )
+    lib.notify( { title = locale('cl_property_returned'), description = locale('cl_property_has_been'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 } )
     inJail = false
 end)

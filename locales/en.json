@@ -1,0 +1,22 @@
+{
+    "cl_lang_1" : "Open ",
+    "cl_returning" : "Returning to Prison",
+    "cl_prison_menu" : "Prison Menu",
+    "cl_prison_shop" : "Prison Shop",
+    "cl_keep" : "keep yourself alive",
+    "cl_post_office" : "Post Office",
+    "cl_keep_in" : "keep in touch with loved ones",
+    "cl_telegram" : "Telegram Menu",
+    "cl_read" : "Read Messages",
+    "cl_read_your" : "read your telegram messages",
+    "cl_send" : "Send Telegram",
+    "cl_send_a" : "send a telegram",
+    "cl_property" : "Property Seized",
+    "cl_freedom_in" : "Freedom in ",
+    "cl_time" : " mins!",
+    "cl_getting" : "Getting ready for release!",
+    "cl_freedom" : "Freedom",
+    "cl_free" : "You\"re free from prison, good luck",
+    "cl_property_returned" : "Property Returned",
+    "cl_property_has_been" : "You\"re property has been returned to your inventory"
+}

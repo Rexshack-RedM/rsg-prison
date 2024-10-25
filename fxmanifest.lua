@@ -7,8 +7,6 @@ version '1.1.0'
 
 shared_scripts {
     '@ox_lib/init.lua',
-    '@rsg-core/shared/locale.lua',
-    'locales/en.lua', -- preferred language
     'config.lua'
 }
 
@@ -19,7 +17,7 @@ client_scripts {
     '@PolyZone/CircleZone.lua',
     '@PolyZone/ComboZone.lua',
     'client/client.lua',
-    'client/npcs.lua'
+    'client/npcs.lua',
 }
 
 server_scripts {
@@ -28,11 +26,14 @@ server_scripts {
     'server/versionchecker.lua'
 }
 
+files {
+    'locales/*.json', -- preferred language
+}
+
 dependencies {
     'rsg-core',
     'ox_lib',
 }
 
 use_fxv2_oal 'yes'
-
 lua54 'yes'
