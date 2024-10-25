@@ -80,7 +80,6 @@ end)
 --------------------------
 -- prison menu
 --------------------------
-
 RegisterNetEvent('rsg-prison:client:menu', function(id)
     lib.registerContext(
         {
@@ -92,9 +91,7 @@ RegisterNetEvent('rsg-prison:client:menu', function(id)
                     title = locale('cl_prison_shop'),
                     description = locale('cl_keep'),
                     icon = 'fas fa-shopping-basket',
-                    onSelect = function()
-                        TriggerServerEvent('rsg-shops:server:openstore', 'PrisonShop', 'PrisonShop', locale('cl_prison_shop'))
-                    end,
+                    event = 'rsg-prison:client:shop',
                 },
                 {
                     title = locale('cl_post_office'),
@@ -136,6 +133,14 @@ RegisterNetEvent('rsg-prison:client:telegrammenu', function()
         }
     )
     lib.showContext('telegram_menu')
+end)
+
+--------------------------
+-- prison shop
+--------------------------
+RegisterNetEvent('rsg-prison:client:shop')
+AddEventHandler('rsg-prison:client:shop', function()
+    TriggerServerEvent('rsg-shops:server:openstore', 'prison', 'prison', locale('cl_prison_shop'))
 end)
 
 --------------------------
@@ -240,15 +245,30 @@ function handleJailtime()
             jailtimeMinsRemaining = jailtimeMinsRemaining - 1
             if jailtimeMinsRemaining > 0 then
                 if jailtimeMinsRemaining > 1 then
-
-                    exports['rsg-core']:DrawText(locale('cl_freedom_in') .. jailtimeMinsRemaining .. locale('cl_time'), 'left')
+                    lib.showTextUI(locale('cl_freedom_in') .. jailtimeMinsRemaining .. locale('cl_time'), {
+                        position = "left",
+                        icon = 'fa-regular fa-clock',
+                        style = {
+                            borderRadius = 0,
+                            backgroundColor = '#82283E',
+                            color = 'white'
+                        }
+                    })
                     TriggerServerEvent('rsg-prison:server:updateSentance', jailtimeMinsRemaining)
                 else
-                    exports['rsg-core']:DrawText(locale('cl_getting'), 'left')
+                    lib.showTextUI(locale('cl_getting'), {
+                        position = "left",
+                        icon = 'fa-regular fa-clock',
+                        style = {
+                            borderRadius = 0,
+                            backgroundColor = '#82283E',
+                            color = 'white'
+                        }
+                    })
                     TriggerServerEvent('rsg-prison:server:updateSentance', jailtimeMinsRemaining)
                 end
             else
-                exports['rsg-core']:HideText()
+				lib.hideTextUI()
                 TriggerEvent('rsg-prison:client:freedom')
             end
         end
@@ -267,10 +287,12 @@ RegisterNetEvent('rsg-prison:client:freedom', function()
     Wait(3000)
     SetEntityCoords(cache.ped, Config.Locations["outside"].coords.x, Config.Locations["outside"].coords.y, Config.Locations["outside"].coords.z, 0, 0, 0, false)
     SetEntityHeading(cache.ped, Config.Locations["outside"].coords.w)
+
     local currentHealth = GetEntityHealth(cache.ped)
     local maxStamina = GetPedMaxStamina(cache.ped, Citizen.ResultAsFloat())
     local currentStamina = GetPedStamina(cache.ped, Citizen.ResultAsFloat()) / maxStamina * 100
     ExecuteCommand('loadskin')
+
     Wait(1000)
     SetEntityHealth(cache.ped, currentHealth )
     ChangePedStamina(cache.ped, currentStamina)
