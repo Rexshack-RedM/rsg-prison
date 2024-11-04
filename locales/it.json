@@ -1,0 +1,22 @@
+{
+    "cl_lang_1" : "Apri ",
+    "cl_returning" : "Torna in Prigione",
+    "cl_prison_menu" : "Menu Prigione",
+    "cl_prison_shop" : "Negozio Prigione",
+    "cl_keep" : "rimani in vita",
+    "cl_post_office" : "Ufficio Postale",
+    "cl_keep_in" : "tenersi in contatto con i propri cari",
+    "cl_telegram" : "Menu Telegrammi",
+    "cl_read" : "Leggi Messaggi",
+    "cl_read_your" : "leggi i tuoi telegrammi",
+    "cl_send" : "Invio Telegramma",
+    "cl_send_a" : "invia un telegramma",
+    "cl_property" : "Beni Sequestrati",
+    "cl_freedom_in" : "Sarai libero tra ",
+    "cl_time" : " minuti!",
+    "cl_getting" : "Stai per essere rilasciato!",
+    "cl_freedom" : "Sei libero",
+    "cl_free" : "Sei libero dalla prigione, buona fortuna",
+    "cl_property_returned" : "Beni Restituiti",
+    "cl_property_has_been" : "I tuoi beni sono stati restituiti, puoi trovarli nel tuo inventario"
+}
