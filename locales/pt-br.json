@@ -1,0 +1,22 @@
+{
+    "cl_lang_1" : "Abrir ",
+    "cl_returning" : "Retornando para a Prisão",
+    "cl_prison_menu" : "Menu da Prisão",
+    "cl_prison_shop" : "Loja da Prisão",
+    "cl_keep" : "mantenha-se vivo",
+    "cl_post_office" : "Correios",
+    "cl_keep_in" : "mantenha contato com seus entes queridos",
+    "cl_telegram" : "Menu de Telegrama",
+    "cl_read" : "Ler Mensagens",
+    "cl_read_your" : "leia suas mensagens de telegrama",
+    "cl_send" : "Enviar Telegrama",
+    "cl_send_a" : "enviar um telegrama",
+    "cl_property" : "Propriedade Apreendida",
+    "cl_freedom_in" : "Liberdade em ",
+    "cl_time" : " min!",
+    "cl_getting" : "Se preparando para a soltura!",
+    "cl_freedom" : "Liberdade",
+    "cl_free" : "Você está livre da prisão, boa sorte",
+    "cl_property_returned" : "Propriedade Devolvida",
+    "cl_property_has_been" : "Seus bens foram devolvidos ao seu inventário"
+}
