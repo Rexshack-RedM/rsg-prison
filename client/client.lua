@@ -241,7 +241,6 @@ function handleJailtime()
     jailtimeMinsRemaining = jailTime
     CreateThread(function()
         while inJail and jailtimeMinsRemaining > 0 do
-            jailtimeMinsRemaining = jailtimeMinsRemaining - 1
             if jailtimeMinsRemaining > 0 then
                 if jailtimeMinsRemaining > 1 then
                     lib.showTextUI(locale('cl_freedom_in') .. jailtimeMinsRemaining .. locale('cl_time'), {
@@ -271,6 +270,7 @@ function handleJailtime()
                 TriggerEvent('rsg-prison:client:freedom')
             end
             Wait(1000 * 60)
+            jailtimeMinsRemaining = jailtimeMinsRemaining - 1
         end
         jailtimeMinsRemaining = 0
         lib.hideTextUI()
