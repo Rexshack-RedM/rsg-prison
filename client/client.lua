@@ -210,7 +210,7 @@ function handleJailtime()
             -- Handle timer
             if jailtimeMinsRemaining > 1 then
                 lib.showTextUI(locale('cl_freedom_in') .. jailtimeMinsRemaining .. locale('cl_time'), {
-                    position = "left",
+                    position = "top-center",
                     icon = 'fa-regular fa-clock',
                     style = {
                         borderRadius = 0,
@@ -221,7 +221,7 @@ function handleJailtime()
                 TriggerServerEvent('rsg-prison:server:updateSentance', jailtimeMinsRemaining)
             elseif jailtimeMinsRemaining == 1 then
                 lib.showTextUI(locale('cl_getting'), {
-                    position = "left",
+                    position = "top-center",
                     icon = 'fa-regular fa-clock',
                     style = {
                         borderRadius = 0,
