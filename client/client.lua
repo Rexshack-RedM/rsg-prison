@@ -240,8 +240,7 @@ end)
 function handleJailtime()
     jailtimeMinsRemaining = jailTime
     CreateThread(function()
-        while jailtimeMinsRemaining > 0 do
-            Wait(1000 * 60)
+        while inJail and jailtimeMinsRemaining > 0 do
             jailtimeMinsRemaining = jailtimeMinsRemaining - 1
             if jailtimeMinsRemaining > 0 then
                 if jailtimeMinsRemaining > 1 then
@@ -271,7 +270,10 @@ function handleJailtime()
 				lib.hideTextUI()
                 TriggerEvent('rsg-prison:client:freedom')
             end
+            Wait(1000 * 60)
         end
+        jailtimeMinsRemaining = 0
+        lib.hideTextUI()
     end)
 end
 
@@ -279,6 +281,8 @@ end
 -- released from jail
 --------------------------
 RegisterNetEvent('rsg-prison:client:freedom', function()
+    inJail = false
+
     TriggerServerEvent('rsg-prison:server:FreePlayer')
     TriggerServerEvent('rsg-prison:server:GiveJailItems')
     TriggerServerEvent('rsg-prison:server:resetoutlawstatus')
@@ -301,5 +305,4 @@ RegisterNetEvent('rsg-prison:client:freedom', function()
     lib.notify( { title = locale('cl_freedom'), description = locale('cl_free'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 } )
     Wait(7000)
     lib.notify( { title = locale('cl_property_returned'), description = locale('cl_property_has_been'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 } )
-    inJail = false
 end)
