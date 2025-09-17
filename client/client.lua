@@ -34,46 +34,9 @@ CreateThread(function()
         })
 
         Zones[k]:onPlayerInOut(function(isPointInside)
-            if not isPointInside then
-                inJailZone = false
-                return
-            end
-
-            inJailZone = true
+            inJailZone = isPointInside
+            TriggerEvent('rsg-prison:client:jailZoneInOut', isPointInside)
         end)
-    end
-end)
-
---------------------------
--- Prison Zone Loop
---------------------------
-CreateThread(function()
-    while true do
-        local isJailed = 0
-        local teleport = vector3(3368.31, -665.94, 46.29)
-
-        if LocalPlayer.state['isLoggedIn'] then
-            RSGCore.Functions.GetPlayerData(function(PlayerData)
-                isJailed = PlayerData.metadata["injail"]
-            end)
-        end
-
-        if isJailed <= 0 then goto continue end
-        if inJailZone then goto continue end
-        lib.notify( { title = locale('cl_returning'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 } )
-
-        Wait(3000)
-        DoScreenFadeOut(1000)
-
-        Wait(1000)
-        SetEntityCoords(cache.ped, teleport)
-
-        Wait(1000)
-        DoScreenFadeIn(1000)
-
-        ::continue::
-
-        Wait(10000)
     end
 end)
 
@@ -171,6 +134,8 @@ end)
 
 RegisterNetEvent('RSGCore:Client:OnPlayerUnload', function()
     inJail = false
+    jailtimeMinsRemaining = 0
+    lib.hideTextUI()
 end)
 
 --------------------------
@@ -240,66 +205,91 @@ end)
 function handleJailtime()
     jailtimeMinsRemaining = jailTime
     CreateThread(function()
-        while jailtimeMinsRemaining > 0 do
-            Wait(1000 * 60)
-            jailtimeMinsRemaining = jailtimeMinsRemaining - 1
-            if jailtimeMinsRemaining > 0 then
-                if jailtimeMinsRemaining > 1 then
-                    lib.showTextUI(locale('cl_freedom_in') .. jailtimeMinsRemaining .. locale('cl_time'), {
-                        position = "left",
-                        icon = 'fa-regular fa-clock',
-                        style = {
-                            borderRadius = 0,
-                            backgroundColor = '#82283E',
-                            color = 'white'
-                        }
-                    })
-                    TriggerServerEvent('rsg-prison:server:updateSentance', jailtimeMinsRemaining)
-                else
-                    lib.showTextUI(locale('cl_getting'), {
-                        position = "left",
-                        icon = 'fa-regular fa-clock',
-                        style = {
-                            borderRadius = 0,
-                            backgroundColor = '#82283E',
-                            color = 'white'
-                        }
-                    })
-                    TriggerServerEvent('rsg-prison:server:updateSentance', jailtimeMinsRemaining)
-                end
-            else
-				lib.hideTextUI()
-                TriggerEvent('rsg-prison:client:freedom')
+        -- Wait for release time
+        while inJail and jailtimeMinsRemaining > 0 do            
+            -- Handle timer
+            if jailtimeMinsRemaining > 1 then
+                lib.showTextUI(locale('cl_freedom_in') .. jailtimeMinsRemaining .. locale('cl_time'), {
+                    position = "left",
+                    icon = 'fa-regular fa-clock',
+                    style = {
+                        borderRadius = 0,
+                        backgroundColor = '#82283E',
+                        color = 'white'
+                    },
+                })
+                TriggerServerEvent('rsg-prison:server:updateSentance', jailtimeMinsRemaining)
+            elseif jailtimeMinsRemaining == 1 then
+                lib.showTextUI(locale('cl_getting'), {
+                    position = "left",
+                    icon = 'fa-regular fa-clock',
+                    style = {
+                        borderRadius = 0,
+                        backgroundColor = '#82283E',
+                        color = 'white'
+                    }
+                })
+                TriggerServerEvent('rsg-prison:server:updateSentance', jailtimeMinsRemaining)
             end
+            jailtimeMinsRemaining = jailtimeMinsRemaining - 1
+            Wait(1000 * 60)
+        end
+
+        -- Release by schedule time
+        if inJail then
+            TriggerEvent('rsg-prison:client:freedom')
         end
     end)
 end
 
 --------------------------
+-- prevent player escape
+--------------------------
+AddEventHandler('rsg-prison:client:jailZoneInOut', function(isPointInside)
+    if inJail and jailtimeMinsRemaining > 0 then
+        if not inJailZone then
+            lib.notify( { title = locale('cl_returning'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 } )
+            Wait(3000)
+            DoScreenFadeOut(1000)
+            Wait(1000)
+            local teleport = vector3(3368.31, -665.94, 46.29)
+            SetEntityCoords(PlayerPedId(), teleport)
+            Wait(1000)
+            DoScreenFadeIn(1000)             
+        end
+    end
+end)
+
+--------------------------
 -- released from jail
 --------------------------
 RegisterNetEvent('rsg-prison:client:freedom', function()
+    inJail = false
+    jailtimeMinsRemaining = 0
+    lib.hideTextUI()
+
     TriggerServerEvent('rsg-prison:server:FreePlayer')
     TriggerServerEvent('rsg-prison:server:GiveJailItems')
     TriggerServerEvent('rsg-prison:server:resetoutlawstatus')
     Wait(500)
     DoScreenFadeOut(1000)
     Wait(3000)
-    SetEntityCoords(cache.ped, Config.Locations["outside"].coords.x, Config.Locations["outside"].coords.y, Config.Locations["outside"].coords.z, 0, 0, 0, false)
-    SetEntityHeading(cache.ped, Config.Locations["outside"].coords.w)
 
-    local currentHealth = GetEntityHealth(cache.ped)
-    local maxStamina = GetPedMaxStamina(cache.ped, Citizen.ResultAsFloat())
-    local currentStamina = GetPedStamina(cache.ped, Citizen.ResultAsFloat()) / maxStamina * 100
-    ExecuteCommand('loadskin')
+    local playerPed = PlayerPedId()
+    SetEntityCoords(playerPed, Config.Locations["outside"].coords.x, Config.Locations["outside"].coords.y, Config.Locations["outside"].coords.z, 0, 0, 0, false)
+    SetEntityHeading(playerPed, Config.Locations["outside"].coords.w)
+    local currentHealth = GetEntityHealth(playerPed)
+    local maxStamina = GetPedMaxStamina(playerPed, Citizen.ResultAsFloat())
+    local currentStamina = GetPedStamina(playerPed, Citizen.ResultAsFloat()) / maxStamina * 100
+    
+    exports['rsg-appearance']:ApplySkin()
 
-    Wait(1000)
-    SetEntityHealth(cache.ped, currentHealth )
-    ChangePedStamina(cache.ped, currentStamina)
+    local playerPed = PlayerPedId()
+    SetEntityHealth(playerPed, currentHealth )
+    ChangePedStamina(playerPed, currentStamina)
     DoScreenFadeIn(1000)
 
     lib.notify( { title = locale('cl_freedom'), description = locale('cl_free'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 } )
     Wait(7000)
     lib.notify( { title = locale('cl_property_returned'), description = locale('cl_property_has_been'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 } )
-    inJail = false
 end)
