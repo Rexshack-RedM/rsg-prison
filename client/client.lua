@@ -6,6 +6,158 @@ local inJailZone = false
 local jailTime = 0
 local Zones = {}
 
+local repairPoints = {
+    {coords = vector3(3339.29, -685.27, 44.03), isRepairing = false},
+	{coords = vector3(3330.18, -693.21, 44.36), isRepairing = false},
+	{coords = vector3(3333.31, -700.88, 44.03), isRepairing = false},
+	{coords = vector3(3339.05, -668.45, 45.78), isRepairing = false},
+   
+}
+
+
+local spriteName = "feeds"
+local spriteDict = "toast_bg"
+
+
+Citizen.CreateThread(function()
+    RequestStreamedTextureDict(spriteName)
+    while not HasStreamedTextureDictLoaded(spriteName) do
+        Wait(100)
+    end
+end)
+function IsPlayerInPrison()
+    if not inJail then 
+        return false 
+    end
+    return true
+end
+function DrawText3D(x, y, z, text)
+    local onScreen, _x, _y = GetScreenCoordFromWorldCoord(x, y, z)
+    
+    if onScreen then
+        
+        SetTextScale(0.35, 0.35)
+        SetTextFontForCurrentCommand(1)
+        SetTextColor(255, 255, 255, 215) 
+        
+       
+        local str = CreateVarString(10, "LITERAL_STRING", text)
+        SetTextCentre(1)
+        DisplayText(str, _x, _y)
+        
+       
+        local factor = (string.len(text)) / 370
+        DrawRect(_x, _y + 0.0125, factor, 0.03, 0, 0, 0, 75)
+    end
+end
+
+Citizen.CreateThread(function()
+    while true do
+        Citizen.Wait(5)
+        local playerPed = PlayerPedId()
+        local pos = GetEntityCoords(playerPed)
+        local inRange = false
+        
+        
+        if IsPlayerInPrison() then
+            for k, point in pairs(repairPoints) do
+                if not point.isRepairing then
+                    local dist = #(pos - point.coords)
+                    
+                    if dist < 50.0 then
+                        inRange = true
+                       
+                        Citizen.InvokeNative(0x2A32FAA57B937173, 0x07DCE236, point.coords.x, point.coords.y, point.coords.z - 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 255, 0, 0, 155, false, false, false, 1, false, false, false)
+                        
+                        if dist < 2.5 then
+                            DrawText3D(point.coords.x, point.coords.y, point.coords.z + 1.0, 'PRESS [E] TO REPAIR FOUNDATIONS')
+                            
+                            if IsControlJustPressed(0, 0xCEFD9220) then -- E key
+                                StartRepairWork(k)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        if not inRange then
+            Citizen.Wait(1000)
+        end
+    end
+end)
+
+function StartRepairWork(pointIndex)
+    local point = repairPoints[pointIndex]
+    if point.isRepairing then return end
+    
+    point.isRepairing = true
+    
+    
+    local dict = "amb_work@world_human_hammer@wall@male_a@trans"
+    local anim = "base_trans_base"
+    
+    
+    RequestAnimDict(dict)
+    while not HasAnimDictLoaded(dict) do
+        Citizen.Wait(100)
+    end
+    
+   
+    local hammer = CreateObject(`p_hammer01x`, GetEntityCoords(PlayerPedId()), true, true, true)
+    AttachEntityToEntity(hammer, PlayerPedId(), GetEntityBoneIndexByName(PlayerPedId(), "PH_R_Hand"), 0.02, 0.04, -0.06, 180.0, 180.0, 0.0, true, true, false, true, 1, true)
+    
+    TaskPlayAnim(PlayerPedId(), dict, anim, 8.0, -8.0, -1, 1, 0, true, 0, false, 0, false)
+    
+    if lib.progressBar({
+        duration = 10000,
+        label = 'ðŸ”¨ Repairing Damage...',
+        useWhileDead = false,
+        canCancel = true,
+        disable = {
+            move = true,
+            car = true,
+            combat = true,
+            mouse = false
+        },
+        anim = {
+            dict = dict,
+            clip = anim
+        },
+    }) then 
+        if IsPlayerInPrison() then
+            point.isRepairing = false
+            ClearPedTasks(PlayerPedId())
+            DeleteEntity(hammer) 
+            TriggerServerEvent('prison:rewardWork', true)
+            lib.notify({
+                title = 'Prison Work',
+                description = 'repair completed',
+                type = 'success',
+                icon = 'fas fa-hammer'
+            })
+        else
+            DeleteEntity(hammer) 
+            lib.notify({
+                title = 'Prison Work',
+                description = 'Work cancelled - You are no longer in prison',
+                type = 'error',
+                icon = 'fas fa-exclamation-triangle'
+            })
+        end
+    else -- Cancelled
+        point.isRepairing = false
+        ClearPedTasks(PlayerPedId())
+        DeleteEntity(hammer) 
+        lib.notify({
+                title = 'Prison Work',
+                description = 'Repair work cancelled',
+                type = 'error',
+                icon = 'fas fa-times'
+            })
+    end
+end
+
 --------------------------
 -- show blip
 --------------------------
