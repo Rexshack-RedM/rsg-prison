@@ -282,7 +282,7 @@ RegisterNetEvent('rsg-prison:client:freedom', function()
     local maxStamina = GetPedMaxStamina(playerPed, Citizen.ResultAsFloat())
     local currentStamina = GetPedStamina(playerPed, Citizen.ResultAsFloat()) / maxStamina * 100
     
-    exports['rsg-appearance']:ApplySkin()
+    exports['rsg-character']:ApplySkin()
 
     local playerPed = PlayerPedId()
     SetEntityHealth(playerPed, currentHealth )
