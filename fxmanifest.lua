@@ -3,7 +3,7 @@ rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aw
 game 'rdr3'
 
 description 'rsg-prison'
-version '3.0.0'
+version '3.1.0'
 
 shared_scripts {
     '@ox_lib/init.lua',
@@ -11,11 +11,6 @@ shared_scripts {
 }
 
 client_scripts {
-    '@PolyZone/client.lua',
-    '@PolyZone/BoxZone.lua',
-    '@PolyZone/EntityZone.lua',
-    '@PolyZone/CircleZone.lua',
-    '@PolyZone/ComboZone.lua',
     'client/client.lua',
     'client/npcs.lua',
 }
@@ -27,13 +22,15 @@ server_scripts {
 }
 
 files {
-    'locales/*.json', -- preferred language
+    'locales/*.json',
 }
 
 dependencies {
     'rsg-core',
+    'rsg-inventory',
     'ox_lib',
+    'ox_target',
+    'oxmysql',
 }
 
-use_fxv2_oal 'yes'
 lua54 'yes'

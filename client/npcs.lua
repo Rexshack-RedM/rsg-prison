@@ -1,89 +1,68 @@
-local spawnedPeds = {}
-lib.locale()
+local guards = {}
 
-local function NearNPC(npcmodel, npccoords, heading)
-    local spawnedPed = CreatePed(npcmodel, npccoords.x, npccoords.y, npccoords.z - 1.0, heading, false, false, 0, 0)
-    SetEntityAlpha(spawnedPed, 0, false)
-    SetRandomOutfitVariation(spawnedPed, true)
-    SetEntityCanBeDamaged(spawnedPed, false)
-    SetEntityInvincible(spawnedPed, true)
-    FreezeEntityPosition(spawnedPed, true)
-    SetBlockingOfNonTemporaryEvents(spawnedPed, true)
-    SetPedCanBeTargetted(spawnedPed, false)
+local function spawnGuard(model, coords)
+    if not lib.requestModel(model, 10000) then return end
+    local ped = CreatePed(model, coords.x, coords.y, coords.z - 1.0, coords.w, false, false, false, false)
+    SetModelAsNoLongerNeeded(model)
+    SetEntityAlpha(ped, Config.FadeIn and 0 or 255, false)
+    SetRandomOutfitVariation(ped, true)
+    SetEntityCanBeDamaged(ped, false)
+    SetEntityInvincible(ped, true)
+    FreezeEntityPosition(ped, true)
+    SetBlockingOfNonTemporaryEvents(ped, true)
+    SetPedCanBeTargetted(ped, false)
+
+    exports.ox_target:addLocalEntity(ped, {
+        {
+            name = 'rsg_prison_menu',
+            icon = 'fa-solid fa-handcuffs',
+            label = locale('cl_prison_menu'),
+            distance = 2.0,
+            onSelect = function() TriggerEvent('rsg-prison:client:menu') end
+        }
+    })
 
     if Config.FadeIn then
         for i = 0, 255, 51 do
             Wait(50)
-            SetEntityAlpha(spawnedPed, i, false)
+            SetEntityAlpha(ped, i, false)
         end
     end
-
-    return spawnedPed
+    return ped
 end
 
-CreateThread(function()
-    for k,v in pairs(Config.MenuLocations) do
-        local coords = v.npccoords
-        local newpoint = lib.points.new({
-            coords = coords,
-            heading = coords.w,
-            distance = Config.DistanceSpawn,
-            model = v.npcmodel,
-            ped = nil,
-            name = v.name,
-            prompt = v.prompt
-        })
-
-        newpoint.onEnter = function(self)
-            if not self.ped then
-                lib.requestModel(self.model, 10000)
-                self.ped = NearNPC(self.model, self.coords, self.heading)
-
-                pcall(function ()
-                    exports['rsg-target']:AddTargetEntity(self.ped, {
-                        options = {
-                            {
-                                icon = 'fa-solid fa-eye',
-                                label = locale('cl_prison_menu'),
-                                targeticon = 'fa-solid fa-eye',
-                                action = function()
-                                    TriggerEvent('rsg-prison:client:menu', self.prompt)
-                                end
-                            },
-                        },
-                        distance = 2.0,
-                    })
-                end)
-            end
+local function removeGuard(ped, fade)
+    if not ped or not DoesEntityExist(ped) then return end
+    exports.ox_target:removeLocalEntity(ped, 'rsg_prison_menu')
+    if fade and Config.FadeIn then
+        for i = 255, 0, -51 do
+            Wait(50)
+            SetEntityAlpha(ped, i, false)
         end
-
-        newpoint.onExit = function(self)
-            exports['rsg-target']:RemoveTargetEntity(self.ped, locale('cl_prison_menu'))
-            if self.ped and DoesEntityExist(self.ped) then
-                if Config.FadeIn then
-                    for i = 255, 0, -51 do
-                        Wait(50)
-                        SetEntityAlpha(self.ped, i, false)
-                    end
-                end
-                DeleteEntity(self.ped)
-                self.ped = nil
-            end
-        end
-
-        spawnedPeds[k] = newpoint
     end
-end)
+    DeleteEntity(ped)
+end
 
--- cleanup
-AddEventHandler("onResourceStop", function(resourceName)
-    if GetCurrentResourceName() ~= resourceName then return end
-    for k, v in pairs(spawnedPeds) do
-        exports['rsg-target']:RemoveTargetEntity(v.ped, locale('cl_prison_menu'))
-        if v.ped and DoesEntityExist(v.ped) then
-            DeleteEntity(v.ped)
-        end
+for k, v in ipairs(Config.MenuLocations) do
+    local point = lib.points.new({ coords = v.npccoords.xyz, distance = Config.DistanceSpawn })
 
-        spawnedPeds[k] = nil
+    function point:onEnter()
+        if not self.ped then self.ped = spawnGuard(v.npcmodel, v.npccoords) end
+    end
+
+    function point:onExit()
+        local ped = self.ped
+        self.ped = nil
+        removeGuard(ped, true)
+    end
+
+    guards[k] = point
+end
+
+AddEventHandler('onResourceStop', function(resource)
+    if resource ~= GetCurrentResourceName() then return end
+    for _, point in pairs(guards) do
+        removeGuard(point.ped, false)
+        point:remove()
     end
 end)
