@@ -47,13 +47,24 @@ for k, v in ipairs(Config.MenuLocations) do
     local point = lib.points.new({ coords = v.npccoords.xyz, distance = Config.DistanceSpawn })
 
     function point:onEnter()
-        if not self.ped then self.ped = spawnGuard(v.npcmodel, v.npccoords) end
+        self.inside = true
+        if self.ped or self.spawning then return end
+        self.spawning = true
+        CreateThread(function()
+            local ped = spawnGuard(v.npcmodel, v.npccoords)
+            self.spawning = false
+            if not self.inside then
+                return removeGuard(ped, false) -- walked away while loading
+            end
+            self.ped = ped
+        end)
     end
 
     function point:onExit()
+        self.inside = false
         local ped = self.ped
         self.ped = nil
-        removeGuard(ped, true)
+        if ped then CreateThread(function() removeGuard(ped, true) end) end
     end
 
     guards[k] = point

@@ -1,0 +1,19 @@
+/* rsg-prison countdown HUD: same look as the rsg-drugs rehab HUD (leather & gold, monochrome) */
+:root{--rdr-black:#000;--rdr-panel:#0a0a0a;--rdr-panel-2:#141414;--rdr-gold:#fff;--rdr-gold-dim:#5a5a5a;--rdr-text:#f2f2f2;--rdr-muted:#9a9a9a;--rdr-cost-ok:#6fbf73;--rdr-shadow:rgba(0,0,0,.85)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:transparent;overflow:hidden;user-select:none;font-family:'Roboto',sans-serif;color:var(--rdr-text)}
+.hidden{display:none!important}
+
+/* top left, never takes focus */
+#jail-hud{position:fixed;top:24px;left:24px;width:250px;display:flex;align-items:center;gap:12px;padding:12px 14px;pointer-events:none;
+  border:1px solid var(--rdr-gold-dim);border-radius:3px;outline:1px solid rgba(0,0,0,.6);outline-offset:-5px;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.015) 0 1px,transparent 1px 3px),linear-gradient(160deg,var(--rdr-panel-2),var(--rdr-panel) 60%,var(--rdr-black));
+  box-shadow:0 10px 30px var(--rdr-shadow),inset 0 0 30px rgba(0,0,0,.5);animation:jh-in .25s ease}
+@keyframes jh-in{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:none}}
+.jh-icon{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--rdr-gold-dim);display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,#2a2a2a,#0a0a0a);font-size:15px}
+.jh-text{flex:1;min-width:0}
+.jh-title{font-size:10.5px;text-transform:uppercase;letter-spacing:2px;color:var(--rdr-muted)}
+.jh-time{font-size:22px;font-weight:600;letter-spacing:1px;text-shadow:0 2px 6px #000;font-variant-numeric:tabular-nums}
+.jh-bar{height:6px;margin-top:5px;background:rgba(0,0,0,.45);border:1px solid var(--rdr-gold-dim);border-radius:3px;box-shadow:inset 0 1px 3px #000;overflow:hidden}
+.jh-fill{height:100%;width:0;border-radius:3px 0 0 3px;background:linear-gradient(90deg,#7fcf82,var(--rdr-cost-ok));transition:width .35s ease}
+.jh-sub{font-size:11px;font-style:italic;color:var(--rdr-muted);margin-top:4px}

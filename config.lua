@@ -3,7 +3,7 @@ Config = {}
 ---------------------------------
 -- general
 ---------------------------------
-Config.RemoveJob      = true  -- player loses their job when jailed
+Config.RemoveJob      = true  -- player loses ALL their jobs (rsg-multijob) when jailed and must be re-hired
 Config.JailAllowance  = 0     -- cash given when jailed (0 = none)
 Config.DistanceSpawn  = 20.0  -- distance the guard npc spawns at
 Config.FadeIn         = true  -- fade the guard npc in / out

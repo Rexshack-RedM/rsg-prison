@@ -2,7 +2,6 @@ local RSGCore = exports['rsg-core']:GetCoreObject()
 lib.locale()
 
 local inJail = false
-local minsRemaining = 0
 local blips = {}
 
 ---------------------------------
@@ -21,51 +20,85 @@ CreateThread(function()
 end)
 
 ---------------------------------
--- timer text
+-- countdown HUD (NUI, top left, never takes focus)
 ---------------------------------
-local function showTimer()
-    if not inJail then return lib.hideTextUI() end
-    local text = minsRemaining > 1 and locale('cl_freedom_in', minsRemaining) or locale('cl_getting')
-    lib.showTextUI(text, {
-        position = 'top-center',
-        icon = 'fa-regular fa-clock',
-        style = { borderRadius = 0, backgroundColor = '#82283E', color = 'white' },
+local function showTimer(left, total)
+    SendNUIMessage({
+        action = 'jail:hud', left = left, total = total,
+        title = locale('cl_hud_title'), sub = locale('cl_hud_sub'), ready = locale('cl_getting'),
     })
 end
 
--- server is the only source of truth for remaining time
-RegisterNetEvent('rsg-prison:client:updateTime', function(mins)
+local function hideTimer()
+    SendNUIMessage({ action = 'jail:hide' })
+end
+
+-- server is the only source of truth for remaining time (seconds)
+RegisterNetEvent('rsg-prison:client:updateTime', function(secs, total)
     if not inJail then return end
-    minsRemaining = tonumber(mins) or minsRemaining
-    showTimer()
+    secs = tonumber(secs)
+    if secs then showTimer(secs, tonumber(total)) end
+end)
+
+---------------------------------
+-- weapons (rsg-weapons): unequip on entry, re-equip on release
+---------------------------------
+RegisterNetEvent('rsg-prison:client:disarm', function()
+    if GetResourceState('rsg-weapons') == 'started' then
+        for _, v in pairs(exports['rsg-weapons']:GetUsedWeapons() or {}) do
+            if v.name then TriggerEvent('rsg-weapons:client:UseWeapon', { name = v.name }) end -- name only = unequip
+        end
+    end
+    RemoveAllPedWeapons(cache.ped, true, true)
+    SetCurrentPedWeapon(cache.ped, `WEAPON_UNARMED`, true, 0, false, false)
+end)
+
+RegisterNetEvent('rsg-prison:client:reequip', function(weapons, knives)
+    if GetResourceState('rsg-weapons') ~= 'started' then return end
+    CreateThread(function()
+        Wait(3500) -- after the release fade + ApplySkin and the inventory sync
+        for _, item in ipairs(type(weapons) == 'table' and weapons or {}) do
+            TriggerEvent('rsg-weapons:client:UseWeapon', item)
+            Wait(500)
+        end
+        for _, name in ipairs(type(knives) == 'table' and knives or {}) do
+            TriggerEvent('rsg-weapons:client:UseEquipment', { name = name, info = {} })
+            Wait(500)
+        end
+        Wait(500)
+        Citizen.InvokeNative(0x94A3C1B804D291EC, cache.ped, false, false, false, true) -- holster (same as rsg-weapons restore)
+    end)
 end)
 
 ---------------------------------
 -- prison zone (return escapees)
 ---------------------------------
 local returning = false
-lib.zones.poly({
-    points = Config.PrisonZone.points,
-    thickness = Config.PrisonZone.thickness,
-    onExit = function()
-        if not inJail or not Config.ReturnOnEscape or returning then return end
-        returning = true
-        CreateThread(function()
-            lib.notify({ title = locale('cl_returning'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 })
-            Wait(3000)
-            if inJail then
-                local pos = Config.Locations.escape
-                DoScreenFadeOut(1000)
-                Wait(1000)
-                SetEntityCoords(cache.ped, pos.x, pos.y, pos.z, false, false, false, false)
-                SetEntityHeading(cache.ped, pos.w)
-                Wait(1000)
-                DoScreenFadeIn(1000)
-            end
-            returning = false
-        end)
-    end
-})
+if Config.ReturnOnEscape then
+    lib.zones.poly({
+        points = Config.PrisonZone.points,
+        thickness = Config.PrisonZone.thickness,
+        onExit = function()
+            if not inJail or returning then return end
+            returning = true
+            TriggerServerEvent('rsg-prison:server:escapeAttempt')
+            CreateThread(function()
+                lib.notify({ title = locale('cl_returning'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 })
+                Wait(3000)
+                if inJail then
+                    local pos = Config.Locations.escape
+                    DoScreenFadeOut(1000)
+                    Wait(1000)
+                    SetEntityCoords(cache.ped, pos.x, pos.y, pos.z, false, false, false, false)
+                    SetEntityHeading(cache.ped, pos.w)
+                    Wait(1000)
+                    DoScreenFadeIn(1000)
+                end
+                returning = false
+            end)
+        end
+    })
+end
 
 ---------------------------------
 -- guard menu
@@ -96,32 +129,6 @@ RegisterNetEvent('rsg-prison:client:menu', function()
                 onSelect = requestRation,
                 args = 'bread'
             },
-            {
-                title = locale('cl_post_office'),
-                description = locale('cl_keep_in'),
-                icon = 'far fa-envelope-open',
-                menu = 'prison_telegram_menu'
-            },
-        }
-    })
-    lib.registerContext({
-        id = 'prison_telegram_menu',
-        title = locale('cl_telegram'),
-        position = 'top-right',
-        menu = 'prison_menu',
-        options = {
-            {
-                title = locale('cl_read'),
-                description = locale('cl_read_your'),
-                icon = 'far fa-envelope-open',
-                event = 'rsg-telegram:client:ReadMessages'
-            },
-            {
-                title = locale('cl_send'),
-                description = locale('cl_send_a'),
-                icon = 'far fa-paper-plane',
-                event = 'rsg-telegram:client:WriteMessagePostOffice'
-            },
         }
     })
     lib.showContext('prison_menu')
@@ -149,12 +156,31 @@ local function applyPrisonClothes()
     RemoveAllPedWeapons(ped, true, true)
 end
 
+-- re-apply after a respawn (rsg-medic revive) or anything that swaps the ped (ApplySkin, wardrobe)
+local reapplying = false
+local function reapplyPrisonClothes()
+    if not inJail or reapplying then return end
+    reapplying = true
+    SetTimeout(2000, function() -- let the revive / skin load finish first
+        reapplying = false
+        if inJail and not IsEntityDead(cache.ped) then applyPrisonClothes() end
+    end)
+end
+
+AddEventHandler('rsg-medic:client:revive', reapplyPrisonClothes)
+lib.onCache('ped', reapplyPrisonClothes)
+
 ---------------------------------
 -- send to jail
 ---------------------------------
 RegisterNetEvent('rsg-prison:client:Enter', function(time)
     time = tonumber(time)
     if not time or time <= 0 then return end
+
+    -- already inside (sentence extended): just resync with the server
+    if inJail then
+        return TriggerServerEvent('rsg-prison:server:startSentence')
+    end
 
     local spawn = Config.Locations.spawns[math.random(#Config.Locations.spawns)]
     DoScreenFadeOut(500)
@@ -165,10 +191,8 @@ RegisterNetEvent('rsg-prison:client:Enter', function(time)
     DoScreenFadeIn(500)
 
     inJail = true
-    minsRemaining = time
-    TriggerServerEvent('rsg-prison:server:startSentence')
+    TriggerServerEvent('rsg-prison:server:startSentence') -- server replies with updateTime for the HUD
     applyPrisonClothes()
-    showTimer()
     lib.notify({ title = locale('cl_property'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 })
 end)
 
@@ -178,8 +202,7 @@ end)
 RegisterNetEvent('rsg-prison:client:freedom', function()
     if not inJail then return end
     inJail = false
-    minsRemaining = 0
-    lib.hideTextUI()
+    hideTimer()
     TriggerServerEvent('rsg-prison:server:checkRelease')
 
     DoScreenFadeOut(1000)
@@ -190,7 +213,7 @@ RegisterNetEvent('rsg-prison:client:freedom', function()
     SetEntityHeading(cache.ped, pos.w)
     exports['rsg-character']:ApplySkin()
     Wait(500)
-    SetEntityHealth(PlayerPedId(), health)
+    SetEntityHealth(PlayerPedId(), health) -- ApplySkin can replace the ped, so don't use the cached one
     DoScreenFadeIn(1000)
 
     lib.notify({ title = locale('cl_freedom'), description = locale('cl_free'), type = 'inform', icon = 'fa-solid fa-handcuffs', duration = 7000 })
@@ -206,7 +229,8 @@ local function checkJailState()
     if injail > 0 then
         TriggerEvent('rsg-prison:client:Enter', injail)
     else
-        TriggerServerEvent('rsg-prison:server:checkRelease') -- recover items if released while offline
+        -- recover items if released while offline (after rsg-weapons restores its own loadout)
+        SetTimeout(8000, function() TriggerServerEvent('rsg-prison:server:checkRelease') end)
     end
 end
 
@@ -220,12 +244,11 @@ end)
 
 RegisterNetEvent('RSGCore:Client:OnPlayerUnload', function()
     inJail = false
-    minsRemaining = 0
-    lib.hideTextUI()
+    hideTimer()
 end)
 
 AddEventHandler('onResourceStop', function(resource)
     if resource ~= GetCurrentResourceName() then return end
-    lib.hideTextUI()
+    hideTimer()
     for _, blip in ipairs(blips) do RemoveBlip(blip) end
 end)
