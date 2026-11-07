@@ -1,5 +1,4 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
-lib.locale()
 
 ---------------------------------
 -- server-side sentence tracking (client never decides time)
@@ -20,7 +19,7 @@ local function itemList(items)
 end
 
 local function notify(src, desc, ntype)
-    TriggerClientEvent('ox_lib:notify', src, { title = locale('sv_ration_title'), description = desc, type = ntype })
+    TriggerClientEvent('RSGCore:Client:Notify', src, { title = locale('sv_ration_title'), description = desc, type = ntype })
 end
 
 ---------------------------------
@@ -100,7 +99,7 @@ local function returnItems(src, Player)
     })
     if #left > 0 then -- keep what didn't fit; handed back on next login
         Player.Functions.SetMetaData('jailitems', left)
-        TriggerClientEvent('ox_lib:notify', src, { title = locale('cl_property_returned'), description = locale('sv_items_partial'), type = 'warning', duration = 10000 })
+        TriggerClientEvent('RSGCore:Client:Notify', src, { title = locale('cl_property_returned'), description = locale('sv_items_partial'), type = 'warning', duration = 10000 })
     end
     MySQL.update('UPDATE players SET outlawstatus = ? WHERE citizenid = ?', { 0, Player.PlayerData.citizenid })
     reequip(src, Player)

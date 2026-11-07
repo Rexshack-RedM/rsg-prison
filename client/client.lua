@@ -1,5 +1,4 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
-lib.locale()
 
 local inJail = false
 local blips = {}
@@ -49,8 +48,8 @@ RegisterNetEvent('rsg-prison:client:disarm', function()
             if v.name then TriggerEvent('rsg-weapons:client:UseWeapon', { name = v.name }) end -- name only = unequip
         end
     end
-    RemoveAllPedWeapons(cache.ped, true, true)
-    SetCurrentPedWeapon(cache.ped, `WEAPON_UNARMED`, true, 0, false, false)
+    RemoveAllPedWeapons(PlayerPedId(), true, true)
+    SetCurrentPedWeapon(PlayerPedId(), `WEAPON_UNARMED`, true, 0, false, false)
 end)
 
 RegisterNetEvent('rsg-prison:client:reequip', function(weapons, knives)
@@ -66,7 +65,7 @@ RegisterNetEvent('rsg-prison:client:reequip', function(weapons, knives)
             Wait(500)
         end
         Wait(500)
-        Citizen.InvokeNative(0x94A3C1B804D291EC, cache.ped, false, false, false, true) -- holster (same as rsg-weapons restore)
+        Citizen.InvokeNative(0x94A3C1B804D291EC, PlayerPedId(), false, false, false, true) -- holster (same as rsg-weapons restore)
     end)
 end)
 
@@ -74,30 +73,57 @@ end)
 -- prison zone (return escapees)
 ---------------------------------
 local returning = false
-if Config.ReturnOnEscape then
-    lib.zones.poly({
-        points = Config.PrisonZone.points,
-        thickness = Config.PrisonZone.thickness,
-        onExit = function()
-            if not inJail or returning then return end
-            returning = true
-            TriggerServerEvent('rsg-prison:server:escapeAttempt')
-            CreateThread(function()
-                lib.notify({ title = locale('cl_returning'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 })
-                Wait(3000)
-                if inJail then
-                    local pos = Config.Locations.escape
-                    DoScreenFadeOut(1000)
-                    Wait(1000)
-                    SetEntityCoords(cache.ped, pos.x, pos.y, pos.z, false, false, false, false)
-                    SetEntityHeading(cache.ped, pos.w)
-                    Wait(1000)
-                    DoScreenFadeIn(1000)
-                end
-                returning = false
-            end)
+local function insidePrison(pos)
+    local pts, inside = Config.PrisonZone.points, false
+    local half = Config.PrisonZone.thickness / 2
+    if math.abs(pos.z - pts[1].z) > half then return false end
+    local j = #pts
+    for i = 1, #pts do
+        local a, b = pts[i], pts[j]
+        if ((a.y > pos.y) ~= (b.y > pos.y)) and (pos.x < (b.x - a.x) * (pos.y - a.y) / (b.y - a.y) + a.x) then
+            inside = not inside
         end
-    })
+        j = i
+    end
+    return inside
+end
+
+local function onPrisonExit()
+    if not inJail or returning then return end
+    returning = true
+    TriggerServerEvent('rsg-prison:server:escapeAttempt')
+    CreateThread(function()
+        RSGCore.Functions.Notify({ title = locale('cl_returning'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 })
+        Wait(3000)
+        if inJail then
+            local pos = Config.Locations.escape
+            DoScreenFadeOut(1000)
+            Wait(1000)
+            SetEntityCoords(PlayerPedId(), pos.x, pos.y, pos.z, false, false, false, false)
+            SetEntityHeading(PlayerPedId(), pos.w)
+            Wait(1000)
+            DoScreenFadeIn(1000)
+        end
+        returning = false
+    end)
+end
+
+if Config.ReturnOnEscape then
+    -- plain Lua poly zone (replaces lib.zones.poly; no rsg-core zones yet)
+    CreateThread(function()
+        local wasInside = false
+        while true do
+            if inJail then
+                local now = insidePrison(GetEntityCoords(PlayerPedId()))
+                if wasInside and not now then onPrisonExit() end
+                wasInside = now
+                Wait(500)
+            else
+                wasInside = false
+                Wait(2000)
+            end
+        end
+    end)
 end
 
 ---------------------------------
@@ -107,31 +133,9 @@ local function requestRation(kind)
     TriggerServerEvent('rsg-prison:server:requestRation', kind)
 end
 
-RegisterNetEvent('rsg-prison:client:menu', function()
-    lib.registerContext({
-        id = 'prison_menu',
-        title = locale('cl_prison_menu'),
-        position = 'top-right',
-        options = {
-            {
-                title = locale('cl_request_water'),
-                description = locale('cl_request_water_desc', Config.GuardRations.max),
-                icon = 'fas fa-tint',
-                disabled = not inJail,
-                onSelect = requestRation,
-                args = 'water'
-            },
-            {
-                title = locale('cl_request_bread'),
-                description = locale('cl_request_bread_desc', Config.GuardRations.max),
-                icon = 'fas fa-bread-slice',
-                disabled = not inJail,
-                onSelect = requestRation,
-                args = 'bread'
-            },
-        }
-    })
-    lib.showContext('prison_menu')
+RegisterNetEvent('rsg-prison:client:requestRation', function(kind)
+    if not inJail then return end
+    requestRation(kind)
 end)
 
 ---------------------------------
@@ -146,7 +150,7 @@ local outfitMale   = { 0x5BA76CCF, 0x216612F0, 0x1CCEE58D }
 local outfitFemale = { 0x6AB27695, 0x75BC0CF5, 0x14683CDF }
 
 local function applyPrisonClothes()
-    local ped = cache.ped
+    local ped = PlayerPedId()
     for i = 1, #removeCategories do
         RemoveShopItemFromPedByCategory(ped, removeCategories[i], true, true, true)
     end
@@ -163,12 +167,23 @@ local function reapplyPrisonClothes()
     reapplying = true
     SetTimeout(2000, function() -- let the revive / skin load finish first
         reapplying = false
-        if inJail and not IsEntityDead(cache.ped) then applyPrisonClothes() end
+        if inJail and not IsEntityDead(PlayerPedId()) then applyPrisonClothes() end
     end)
 end
 
 AddEventHandler('rsg-medic:client:revive', reapplyPrisonClothes)
-lib.onCache('ped', reapplyPrisonClothes)
+-- watch for ped swaps (replaces lib.onCache('ped'))
+CreateThread(function()
+    local last = PlayerPedId()
+    while true do
+        Wait(1000)
+        local ped = PlayerPedId()
+        if ped ~= last then
+            last = ped
+            reapplyPrisonClothes()
+        end
+    end
+end)
 
 ---------------------------------
 -- send to jail
@@ -185,15 +200,15 @@ RegisterNetEvent('rsg-prison:client:Enter', function(time)
     local spawn = Config.Locations.spawns[math.random(#Config.Locations.spawns)]
     DoScreenFadeOut(500)
     Wait(500)
-    SetEntityCoords(cache.ped, spawn.x, spawn.y, spawn.z - 0.9, false, false, false, false)
-    SetEntityHeading(cache.ped, spawn.w)
+    SetEntityCoords(PlayerPedId(), spawn.x, spawn.y, spawn.z - 0.9, false, false, false, false)
+    SetEntityHeading(PlayerPedId(), spawn.w)
     Wait(500)
     DoScreenFadeIn(500)
 
     inJail = true
     TriggerServerEvent('rsg-prison:server:startSentence') -- server replies with updateTime for the HUD
     applyPrisonClothes()
-    lib.notify({ title = locale('cl_property'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 })
+    RSGCore.Functions.Notify({ title = locale('cl_property'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 })
 end)
 
 ---------------------------------
@@ -208,16 +223,16 @@ RegisterNetEvent('rsg-prison:client:freedom', function()
     DoScreenFadeOut(1000)
     Wait(1500)
     local pos = Config.Locations.outside
-    local health = GetEntityHealth(cache.ped)
-    SetEntityCoords(cache.ped, pos.x, pos.y, pos.z, false, false, false, false)
-    SetEntityHeading(cache.ped, pos.w)
+    local health = GetEntityHealth(PlayerPedId())
+    SetEntityCoords(PlayerPedId(), pos.x, pos.y, pos.z, false, false, false, false)
+    SetEntityHeading(PlayerPedId(), pos.w)
     exports['rsg-character']:ApplySkin()
     Wait(500)
-    SetEntityHealth(PlayerPedId(), health) -- ApplySkin can replace the ped, so don't use the cached one
+    SetEntityHealth(PlayerPedId(), health) -- ApplySkin can replace the ped, so fetch it again
     DoScreenFadeIn(1000)
 
-    lib.notify({ title = locale('cl_freedom'), description = locale('cl_free'), type = 'inform', icon = 'fa-solid fa-handcuffs', duration = 7000 })
-    lib.notify({ title = locale('cl_property_returned'), description = locale('cl_property_has_been'), type = 'success', icon = 'fa-solid fa-box-open', duration = 7000 })
+    RSGCore.Functions.Notify({ title = locale('cl_freedom'), description = locale('cl_free'), type = 'inform', icon = 'fa-solid fa-handcuffs', duration = 7000 })
+    RSGCore.Functions.Notify({ title = locale('cl_property_returned'), description = locale('cl_property_has_been'), type = 'success', icon = 'fa-solid fa-box-open', duration = 7000 })
 end)
 
 ---------------------------------

@@ -2,7 +2,6 @@
 --   PrisonLog('jail', 'Prisoner jailed', src, { { 'Sentence', '10 min' } })
 -- Embeds are queued per webhook, batched (10 per message) and sent with 429 back-off.
 local RSGCore = exports['rsg-core']:GetCoreObject()
-lib.locale()
 local C = ConfigDiscord
 local queues = {}   -- [url] = { embeds... }
 local waitUntil = {} -- [url] = GetGameTimer() ms when rate limit ends

@@ -3,14 +3,15 @@ rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aw
 game 'rdr3'
 
 description 'rsg-prison'
-version '3.2.0'
+version '3.3.0'
 
 shared_scripts {
-    '@ox_lib/init.lua',
+    '@rsg-core/shared/locale.lua',
     'config.lua'
 }
 
 client_scripts {
+    '@rsg-core/client/points.lua',
     'client/client.lua',
     'client/npcs.lua',
 }
@@ -36,8 +37,7 @@ dependencies {
     'rsg-core',
     'rsg-inventory',
     'rsg-character',
-    'ox_lib',
-    'ox_target',
+    'rsg-target',
     'oxmysql',
 }
 

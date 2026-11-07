@@ -54,7 +54,7 @@ Config.MenuLocations = {
     },
 }
 
--- prison boundary (ox_lib poly zone)
+-- prison boundary (poly zone; thickness = height around points' z)
 Config.PrisonZone = {
     thickness = 30.0,
     points = {

@@ -11,8 +11,7 @@
 ## 🛠️ Dependencies
 - [rsg-core](https://github.com/Rexshack-RedM/rsg-core)
 - [rsg-inventory](https://github.com/Rexshack-RedM/rsg-inventory)
-- [ox_lib](https://github.com/Rexshack-RedM/ox_lib)
-- [ox_target](https://github.com/Rexshack-RedM/ox_target)
+- [rsg-target](https://github.com/Rexshack-RedM/rsg-target)
 - [oxmysql](https://github.com/overextended/oxmysql)
 - [rsg-character](https://github.com/Rexshack-RedM/rsg-character) *(restores clothing on release)*
 - [rsg-multijob](https://github.com/Rexshack-RedM/rsg-multijob) *(removes all jobs when jailed)*
@@ -30,8 +29,8 @@
 - Inventory is **seized on entry** and **returned on release** (to the original slots where possible). Prison rations and any jail allowance are cleared at the same time. Anything that doesn't fit is kept and handed back on the next login.
 - Optional job removal (`Config.RemoveJob`): **every job** the player holds in [rsg-multijob](https://github.com/Rexshack-RedM/rsg-multijob) is removed and they're set to unemployed. They have to ask to be hired again after release.
 - Outlaw status is reset on release.
-- Prisoners who leave the prison zone are **returned automatically** (ox_lib poly zone).
-- **Prison guard** (ox_target) menu:
+- Prisoners who leave the prison zone are **returned automatically** (built-in poly zone).
+- **Prison guard** (rsg-target) options:
   - **Request Water / Request Bread**: one at a time, up to `Config.GuardRations.max` (default 5) of each held, with a cooldown and a distance check on the server.
 - Map blip, configurable locations, and JSON locales.
 
@@ -95,7 +94,7 @@ All options are in `config.lua` (Discord settings in `server/config_discord.lua`
 ---
 
 ## 🌍 Locales
-`en`, `de`, `el`, `es`, `fr`, `it`, `ja`, `nl`, `pl`, `pt-br`, `ro` (via `lib.locale()`; set `setr ox:locale de` etc. in server.cfg). All player-facing text, including the blip name, lives in `locales/*.json`.
+`en`, `de`, `el`, `es`, `fr`, `it`, `ja`, `nl`, `pl`, `pt-br`, `ro` (via rsg-core locales; set `setr rsg:locale de` etc. in server.cfg). All player-facing text, including the blip name, lives in `locales/*.json`.
 
 ---
 

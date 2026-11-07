@@ -1,7 +1,8 @@
+local RSGCore = exports['rsg-core']:GetCoreObject()
 local guards = {}
 
 local function spawnGuard(model, coords)
-    if not lib.requestModel(model, 10000) then return end
+    if not RSGCore.Functions.RequestModel(model, 10000) then return end
     local ped = CreatePed(model, coords.x, coords.y, coords.z - 1.0, coords.w, false, false, false, false)
     SetModelAsNoLongerNeeded(model)
     SetEntityAlpha(ped, Config.FadeIn and 0 or 255, false)
@@ -12,14 +13,21 @@ local function spawnGuard(model, coords)
     SetBlockingOfNonTemporaryEvents(ped, true)
     SetPedCanBeTargetted(ped, false)
 
-    exports.ox_target:addLocalEntity(ped, {
+    exports['rsg-target']:addLocalEntity(ped, {
         {
-            name = 'rsg_prison_menu',
-            icon = 'fa-solid fa-handcuffs',
-            label = locale('cl_prison_menu'),
+            name = 'rsg_prison_water',
+            icon = 'fas fa-tint',
+            label = locale('cl_request_water'),
             distance = 2.0,
-            onSelect = function() TriggerEvent('rsg-prison:client:menu') end
-        }
+            onSelect = function() TriggerEvent('rsg-prison:client:requestRation', 'water') end
+        },
+        {
+            name = 'rsg_prison_bread',
+            icon = 'fas fa-bread-slice',
+            label = locale('cl_request_bread'),
+            distance = 2.0,
+            onSelect = function() TriggerEvent('rsg-prison:client:requestRation', 'bread') end
+        },
     })
 
     if Config.FadeIn then
@@ -33,7 +41,7 @@ end
 
 local function removeGuard(ped, fade)
     if not ped or not DoesEntityExist(ped) then return end
-    exports.ox_target:removeLocalEntity(ped, 'rsg_prison_menu')
+    exports['rsg-target']:removeLocalEntity(ped, { 'rsg_prison_water', 'rsg_prison_bread' })
     if fade and Config.FadeIn then
         for i = 255, 0, -51 do
             Wait(50)
@@ -44,7 +52,7 @@ local function removeGuard(ped, fade)
 end
 
 for k, v in ipairs(Config.MenuLocations) do
-    local point = lib.points.new({ coords = v.npccoords.xyz, distance = Config.DistanceSpawn })
+    local point = points.new({ coords = v.npccoords.xyz, distance = Config.DistanceSpawn })
 
     function point:onEnter()
         self.inside = true
