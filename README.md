@@ -102,4 +102,4 @@ All options are in `config.lua` (Discord settings in `server/config_discord.lua`
 - RSG / Rexshack-RedM and contributors
 - License: GPL-3.0
 
-Support: https://buymeacoffee.com/rexshack
+Support the Project : https://rexshack.tebex.store/
