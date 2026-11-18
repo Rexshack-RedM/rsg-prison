@@ -25,3 +25,73 @@ rsg-core, rsg-inventory, rsg-character, rsg-target, oxmysql. **No ox_lib** (remo
 
 ## Config
 `Config.PrisonZone.points` (vec3 list) and `thickness` (total height band centred on the first point's z).
+
+<!-- BEGIN AUTO-REFERENCE (generated from the code; re-run the generator instead of editing by hand) -->
+
+## Technical reference
+
+Generated from the source of **rsg-prison 3.3.0**. Names, arguments and defaults below are read straight from the code.
+
+### Dependencies
+
+`rsg-core`, `rsg-inventory`, `rsg-character`, `rsg-target`, `oxmysql`
+
+### Configuration
+
+| Option | Default | Notes |
+|---|---|---|
+| `Config.RemoveJob` | `true` | player loses ALL their jobs (rsg-multijob) when jailed and must be re-hired |
+| `Config.JailAllowance` | `0` | cash given when jailed (0 = none) |
+| `Config.DistanceSpawn` | `20.0` | distance the guard npc spawns at |
+| `Config.FadeIn` | `true` | fade the guard npc in / out |
+| `Config.ReturnOnEscape` | `true` | teleport prisoners back if they leave the prison zone |
+| `Config.GuardRations` | `table` |  |
+| `Config.Blip` | `table` |  |
+| `Config.Locations` | `table` |  |
+| `Config.MenuLocations` | `table` | prison guard (menu) locations |
+| `Config.PrisonZone` | `table` | prison boundary (poly zone; thickness = height around points' z) |
+
+### Exports
+
+**Server**
+
+| Export | Arguments | File |
+|---|---|---|
+| `DiscordLog` | `category, title, src, fields, description` | `server/discord.lua` |
+
+```lua
+-- example
+local result = exports['rsg-prison']:DiscordLog(category, title, src, fields, description)
+```
+
+### Events
+
+Server events can be fired by any client, so every handler re-validates the player, the arguments and any permission, distance or cooldown on the server. Never add a reward to a handler without those checks.
+
+| Event | Side | Arguments | File |
+|---|---|---|---|
+| `rsg-prison:client:updateTime` | client | `secs, total` | `client/client.lua` |
+| `rsg-prison:client:disarm` | client | `` | `client/client.lua` |
+| `rsg-prison:client:reequip` | client | `weapons, knives` | `client/client.lua` |
+| `rsg-prison:client:requestRation` | client | `kind` | `client/client.lua` |
+| `rsg-prison:client:Enter` | client | `time` | `client/client.lua` |
+| `rsg-prison:client:freedom` | client | `` | `client/client.lua` |
+| `RSGCore:Client:OnPlayerLoaded` | client | `` | `client/client.lua` |
+| `RSGCore:Client:OnPlayerUnload` | client | `` | `client/client.lua` |
+| `rsg-prison:server:startSentence` | server | `` | `server/server.lua` |
+| `rsg-prison:server:checkRelease` | server | `` | `server/server.lua` |
+| `rsg-prison:server:escapeAttempt` | server | `` | `server/server.lua` |
+| `rsg-prison:server:requestRation` | server | `kind` | `server/server.lua` |
+
+```lua
+-- from a client script
+TriggerServerEvent('rsg-prison:server:startSentence')
+-- from a server script
+TriggerClientEvent('rsg-prison:client:updateTime', source, secs, total)
+```
+
+### Locales
+
+Language files in `locales/`: `de`, `el`, `en`, `es`, `fr`, `it`, `ja`, `nl`, `pl`, `pt-br`, `ro`. Set the language with `setr rsg:locale "en"`.
+
+<!-- END AUTO-REFERENCE -->
