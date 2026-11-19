@@ -94,7 +94,7 @@ All options are in `config.lua` (Discord settings in `server/config_discord.lua`
 ---
 
 ## 🌍 Locales
-`en`, `de`, `el`, `es`, `fr`, `it`, `ja`, `nl`, `pl`, `pt-br`, `ro` (via rsg-core locales; set `setr rsg:locale de` etc. in server.cfg). All player-facing text, including the blip name, lives in `locales/*.json`.
+`en`, `de`, `el`, `es`, `fr`, `it`, `ja`, `nl`, `pl`, `pt-br`, `ro`, `ru` (via rsg-core locales; set `setr rsg:locale de` etc. in server.cfg). All player-facing text, including the blip name, lives in `locales/*.json`.
 
 ---
 
