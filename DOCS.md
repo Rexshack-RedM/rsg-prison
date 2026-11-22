@@ -30,7 +30,7 @@ rsg-core, rsg-inventory, rsg-character, rsg-target, oxmysql. **No ox_lib** (remo
 
 ## Technical reference
 
-Generated from the source of **rsg-prison 3.3.0**. Names, arguments and defaults below are read straight from the code.
+Generated from the source of **rsg-prison 3.3.1**. Names, arguments and defaults below are read straight from the code.
 
 ### Dependencies
 
@@ -40,7 +40,7 @@ Generated from the source of **rsg-prison 3.3.0**. Names, arguments and defaults
 
 | Option | Default | Notes |
 |---|---|---|
-| `Config.RemoveJob` | `true` | player loses ALL their jobs (rsg-multijob) when jailed and must be re-hired |
+| `Config.RemoveJob` | `true` | player loses ALL their jobs (rsg-core multi-job) when jailed and must be re-hired |
 | `Config.JailAllowance` | `0` | cash given when jailed (0 = none) |
 | `Config.DistanceSpawn` | `20.0` | distance the guard npc spawns at |
 | `Config.FadeIn` | `true` | fade the guard npc in / out |

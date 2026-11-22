@@ -54,15 +54,13 @@ local function reequip(src, Player)
 end
 
 ---------------------------------
--- jobs: strip every job (rsg-multijob) so the player has to be re-hired
+-- jobs: strip every job (rsg-core multi-job) so the player has to be re-hired
 ---------------------------------
 local function removeAllJobs(src, Player)
     local removed = {}
-    if GetResourceState('rsg-multijob') == 'started' then
-        for _, j in ipairs(exports['rsg-multijob']:GetJobs(src) or {}) do
-            if j.job and j.job ~= 'unemployed' and exports['rsg-multijob']:RemoveJob(src, j.job) then -- drops the active job to unemployed too
-                removed[#removed + 1] = ('%s (%s)'):format(j.jobLabel or j.job, j.gradeLabel or j.grade or '-')
-            end
+    for _, j in ipairs(exports['rsg-core']:GetPlayerJobs(src) or {}) do
+        if j.job and j.job ~= 'unemployed' and exports['rsg-core']:RemovePlayerJob(src, j.job) then -- drops the active job to unemployed too
+            removed[#removed + 1] = ('%s (%s)'):format(j.jobLabel or j.job, j.gradeLabel or j.grade or '-')
         end
     end
     local active = Player.PlayerData.job.name
@@ -194,7 +192,7 @@ RegisterNetEvent('rsg-prison:server:startSentence', function()
     PrisonLog('jail', locale('dc_t_jailed'), src, { { locale('dc_f_sentence'), locale('dc_minutes', injail) }, { locale('dc_f_job_before'), Player.PlayerData.job.label or Player.PlayerData.job.name } })
     PrisonLog('items', locale('dc_t_items_seized'), src, { { locale('dc_f_stacks'), #items }, { locale('dc_f_items'), itemList(items), false } })
 
-    -- after the snapshot: rsg-multijob awaits the database, and nothing may yield before the clear
+    -- after the snapshot: rsg-core multi-job awaits the database, and nothing may yield before the clear
     if Config.RemoveJob then removeAllJobs(src, Player) end
 
     if Config.JailAllowance > 0 then

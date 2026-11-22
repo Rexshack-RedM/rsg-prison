@@ -14,7 +14,6 @@
 - [rsg-target](https://github.com/Rexshack-RedM/rsg-target)
 - [oxmysql](https://github.com/overextended/oxmysql)
 - [rsg-character](https://github.com/Rexshack-RedM/rsg-character) *(restores clothing on release)*
-- [rsg-multijob](https://github.com/Rexshack-RedM/rsg-multijob) *(removes all jobs when jailed)*
 - [rsg-weapons](https://github.com/Rexshack-RedM/rsg-weapons) *(optional, re-equips weapons on release)*
 - [rsg-telegram](https://github.com/Rexshack-RedM/rsg-telegram) *(optional, prison post office)*
 
@@ -27,7 +26,7 @@
 - **Server-authoritative sentence**: the server counts down (synced every 10 seconds), saves it to the `injail` metadata and releases the player. The client can't shorten its sentence.
 - Sentence resumes after a disconnect or resource restart. Re-jailing a prisoner (or changing `injail`) updates the running sentence.
 - Inventory is **seized on entry** and **returned on release** (to the original slots where possible). Prison rations and any jail allowance are cleared at the same time. Anything that doesn't fit is kept and handed back on the next login.
-- Optional job removal (`Config.RemoveJob`): **every job** the player holds in [rsg-multijob](https://github.com/Rexshack-RedM/rsg-multijob) is removed and they're set to unemployed. They have to ask to be hired again after release.
+- Optional job removal (`Config.RemoveJob`): **every job** the player holds in rsg-core multi-job is removed and they're set to unemployed. They have to ask to be hired again after release.
 - Outlaw status is reset on release.
 - Prisoners who leave the prison zone are **returned automatically** (built-in poly zone).
 - **Prison guard** (rsg-target) options:

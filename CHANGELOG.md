@@ -2,6 +2,9 @@
 
 All notable changes to rsg-prison. Newest first.
 
+## 3.3.1
+- Fix: jailing now removes every job through rsg-core's built-in multi-job exports (`GetPlayerJobs` / `RemovePlayerJob`). The old `rsg-multijob` state check never matched, so only the active job was cleared.
+
 ## 3.3.0
 
 ### Documentation
