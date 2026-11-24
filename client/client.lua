@@ -1,22 +1,28 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 
 local inJail = false
+local busy = false      -- entering / being returned: the zone check pauses while the player is moved
+local watching = false  -- zone + ped watchers only run while jailed
 local blips = {}
+
+-- true while the local player is serving a sentence (metadata is server-set, so this is only used for UI such as target visibility)
+function PrisonIsPrisoner()
+    local pd = RSGCore.Functions.GetPlayerData()
+    return pd and pd.metadata and (tonumber(pd.metadata.injail) or 0) > 0 or false
+end
 
 ---------------------------------
 -- blips
 ---------------------------------
-CreateThread(function()
-    for _, v in ipairs(Config.MenuLocations) do
-        if v.showblip then
-            local blip = BlipAddForCoords(1664425300, v.coords.x, v.coords.y, v.coords.z)
-            SetBlipSprite(blip, joaat(Config.Blip.blipSprite), true)
-            SetBlipScale(blip, Config.Blip.blipScale)
-            SetBlipName(blip, locale('cl_blip_name'))
-            blips[#blips + 1] = blip
-        end
+for _, v in ipairs(Config.MenuLocations) do
+    if v.showblip then
+        local blip = BlipAddForCoords(1664425300, v.npccoords.x, v.npccoords.y, v.npccoords.z)
+        SetBlipSprite(blip, joaat(Config.Blip.blipSprite), true)
+        SetBlipScale(blip, Config.Blip.blipScale)
+        SetBlipName(blip, locale('cl_blip_name'))
+        blips[#blips + 1] = blip
     end
-end)
+end
 
 ---------------------------------
 -- countdown HUD (NUI, top left, never takes focus)
@@ -70,91 +76,14 @@ RegisterNetEvent('rsg-prison:client:reequip', function(weapons, knives)
 end)
 
 ---------------------------------
--- prison zone (return escapees)
----------------------------------
-local returning = false
-local function insidePrison(pos)
-    local pts, inside = Config.PrisonZone.points, false
-    local half = Config.PrisonZone.thickness / 2
-    if math.abs(pos.z - pts[1].z) > half then return false end
-    local j = #pts
-    for i = 1, #pts do
-        local a, b = pts[i], pts[j]
-        if ((a.y > pos.y) ~= (b.y > pos.y)) and (pos.x < (b.x - a.x) * (pos.y - a.y) / (b.y - a.y) + a.x) then
-            inside = not inside
-        end
-        j = i
-    end
-    return inside
-end
-
-local function onPrisonExit()
-    if not inJail or returning then return end
-    returning = true
-    TriggerServerEvent('rsg-prison:server:escapeAttempt')
-    CreateThread(function()
-        RSGCore.Functions.Notify({ title = locale('cl_returning'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 })
-        Wait(3000)
-        if inJail then
-            local pos = Config.Locations.escape
-            DoScreenFadeOut(1000)
-            Wait(1000)
-            SetEntityCoords(PlayerPedId(), pos.x, pos.y, pos.z, false, false, false, false)
-            SetEntityHeading(PlayerPedId(), pos.w)
-            Wait(1000)
-            DoScreenFadeIn(1000)
-        end
-        returning = false
-    end)
-end
-
-if Config.ReturnOnEscape then
-    -- plain Lua poly zone (replaces lib.zones.poly; no rsg-core zones yet)
-    CreateThread(function()
-        local wasInside = false
-        while true do
-            if inJail then
-                local now = insidePrison(GetEntityCoords(PlayerPedId()))
-                if wasInside and not now then onPrisonExit() end
-                wasInside = now
-                Wait(500)
-            else
-                wasInside = false
-                Wait(2000)
-            end
-        end
-    end)
-end
-
----------------------------------
--- guard menu
----------------------------------
-local function requestRation(kind)
-    TriggerServerEvent('rsg-prison:server:requestRation', kind)
-end
-
-RegisterNetEvent('rsg-prison:client:requestRation', function(kind)
-    if not inJail then return end
-    requestRation(kind)
-end)
-
----------------------------------
 -- prison clothing
 ---------------------------------
-local removeCategories = {
-    0x9925C067, 0x485EE834, 0x18729F39, 0x3107499B, 0x3C1A74CD, 0x3F1F01E5, 0x3F7F3587, 0x49C89D9B,
-    0x4A73515C, 0x514ADCEA, 0x5FC29285, 0x79D7DF96, 0x7A96FACA, 0x877A2CF7, 0x9B2C8B89, 0xA6D134C6,
-    0xE06D30CE, 0x0662AC34, 0xAF14310B, 0x72E6EF74, 0xEABE0032, 0x2026C46D, 0xB6B6122D, 0xB9E2FA01,
-}
-local outfitMale   = { 0x5BA76CCF, 0x216612F0, 0x1CCEE58D }
-local outfitFemale = { 0x6AB27695, 0x75BC0CF5, 0x14683CDF }
-
 local function applyPrisonClothes()
     local ped = PlayerPedId()
-    for i = 1, #removeCategories do
-        RemoveShopItemFromPedByCategory(ped, removeCategories[i], true, true, true)
+    for _, category in ipairs(Config.Clothing.remove) do
+        RemoveShopItemFromPedByCategory(ped, category, true, true, true)
     end
-    for _, item in ipairs(IsPedMale(ped) and outfitMale or outfitFemale) do
+    for _, item in ipairs(IsPedMale(ped) and Config.Clothing.male or Config.Clothing.female) do
         ApplyShopItemToPed(ped, item, true, true, true)
     end
     RemoveAllPedWeapons(ped, true, true)
@@ -172,43 +101,91 @@ local function reapplyPrisonClothes()
 end
 
 AddEventHandler('rsg-medic:client:revive', reapplyPrisonClothes)
--- watch for ped swaps (replaces lib.onCache('ped'))
-CreateThread(function()
-    local last = PlayerPedId()
-    while true do
+
+---------------------------------
+-- prison zone (return escapees)
+---------------------------------
+-- moves the player back inside the walls (client-side nicety; the server checks the position too)
+local function returnToPrison()
+    if not inJail or busy then return end
+    busy = true
+    TriggerServerEvent('rsg-prison:server:escapeAttempt')
+    RSGCore.Functions.Notify({ title = locale('cl_returning'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 })
+    Wait(3000)
+    if inJail then
+        local pos = Config.Locations.escape
+        DoScreenFadeOut(1000)
         Wait(1000)
-        local ped = PlayerPedId()
-        if ped ~= last then
-            last = ped
-            reapplyPrisonClothes()
-        end
+        SetEntityCoords(PlayerPedId(), pos.x, pos.y, pos.z, false, false, false, false)
+        SetEntityHeading(PlayerPedId(), pos.w)
+        Wait(1000)
+        DoScreenFadeIn(1000)
     end
+    busy = false
+end
+
+-- the server noticed the prisoner outside the walls
+RegisterNetEvent('rsg-prison:client:return', function()
+    CreateThread(returnToPrison)
 end)
+
+-- one watcher thread while jailed: zone check (500 ms) and ped swap check (every 2nd pass)
+local function startWatchers()
+    if watching then return end
+    watching = true
+    CreateThread(function()
+        local lastPed, pass = PlayerPedId(), 0
+        while inJail do
+            if Config.ReturnOnEscape and not busy and not PrisonZoneContains(GetEntityCoords(PlayerPedId())) then
+                CreateThread(returnToPrison)
+            end
+            pass = pass + 1
+            if pass % 2 == 0 then
+                local ped = PlayerPedId()
+                if ped ~= lastPed then -- ped swapped (ApplySkin, wardrobe)
+                    lastPed = ped
+                    reapplyPrisonClothes()
+                end
+            end
+            Wait(500)
+        end
+        watching = false
+    end)
+end
 
 ---------------------------------
 -- send to jail
+-- resume = true when rejoining / restarted / adopted by the server: no teleport if already inside the walls
 ---------------------------------
-RegisterNetEvent('rsg-prison:client:Enter', function(time)
+RegisterNetEvent('rsg-prison:client:Enter', function(time, resume)
     time = tonumber(time)
     if not time or time <= 0 then return end
 
-    -- already inside (sentence extended): just resync with the server
+    -- already inside (sentence extended, or a repeat call): just resync with the server
     if inJail then
         return TriggerServerEvent('rsg-prison:server:startSentence')
     end
 
-    local spawn = Config.Locations.spawns[math.random(#Config.Locations.spawns)]
-    DoScreenFadeOut(500)
-    Wait(500)
-    SetEntityCoords(PlayerPedId(), spawn.x, spawn.y, spawn.z - 0.9, false, false, false, false)
-    SetEntityHeading(PlayerPedId(), spawn.w)
-    Wait(500)
-    DoScreenFadeIn(500)
-
     inJail = true
+    busy = true -- zone check waits until the player is in place
     TriggerServerEvent('rsg-prison:server:startSentence') -- server replies with updateTime for the HUD
+
+    if not (resume and PrisonZoneContains(GetEntityCoords(PlayerPedId()))) then
+        local spawn = Config.Locations.spawns[math.random(#Config.Locations.spawns)]
+        DoScreenFadeOut(500)
+        Wait(500)
+        SetEntityCoords(PlayerPedId(), spawn.x, spawn.y, spawn.z - 0.9, false, false, false, false)
+        SetEntityHeading(PlayerPedId(), spawn.w)
+        Wait(500)
+        DoScreenFadeIn(500)
+    end
+
     applyPrisonClothes()
-    RSGCore.Functions.Notify({ title = locale('cl_property'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 })
+    busy = false
+    startWatchers()
+    if not resume then
+        RSGCore.Functions.Notify({ title = locale('cl_property'), type = 'inform', icon = 'fa-solid fa-handcuffs', iconAnimation = 'shake', duration = 7000 })
+    end
 end)
 
 ---------------------------------
@@ -242,7 +219,7 @@ local function checkJailState()
     local PlayerData = RSGCore.Functions.GetPlayerData()
     local injail = PlayerData and PlayerData.metadata and PlayerData.metadata.injail or 0
     if injail > 0 then
-        TriggerEvent('rsg-prison:client:Enter', injail)
+        TriggerEvent('rsg-prison:client:Enter', injail, true)
     else
         -- recover items if released while offline (after rsg-weapons restores its own loadout)
         SetTimeout(8000, function() TriggerServerEvent('rsg-prison:server:checkRelease') end)

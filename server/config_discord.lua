@@ -15,12 +15,16 @@ ConfigDiscord = {
         escape   = '',  -- prisoners leaving the prison zone
         rations  = '',  -- water / bread handed out by the guard
         security = '',  -- suspicious requests (rations out of range / not jailed, spam)
+        bail     = '',  -- bail paid for early release
+        labour   = '',  -- time taken off sentences by prison labour
+        contraband = '', -- contraband searches (seized items, time added)
     },
 
     -- embed colours (decimal)
     Colors = {
         jail = 15105570, release = 5763719, items = 9807270, jobs = 3447003,
         escape = 15548997, rations = 10181046, security = 10038562,
+        bail = 15844367, labour = 3426654, contraband = 15105570,
     },
 
     LogRations   = true,      -- rations are frequent; set false to skip them entirely
